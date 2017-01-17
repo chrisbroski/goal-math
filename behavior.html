@@ -3,29 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-<title>Behavioral Logic : Tuning Behavior Variables</title>
+<title>Goal Mathematics - Basic Behavior</title>
+<link rel="stylesheet" href="simple.css">
 <style type="text/css">
-#variableParams {
-    table-layout: fixed;
-    width: 360px;
-    border-collapse: collapse;
-}
-#variableParams th, #variableParams td {
-    text-align: center;
-    border: 2px solid #fff;
-}
-thead td {
+#behaviors thead td {
+    padding: 8px;
     font-weight: bold;
 }
-#variableParams tbody td {
-    height: 200px;
-}
-
-#behaviors td {
+#behaviors td, th {
     text-align: center;
-}
-#behaviors th {
     font-weight: normal;
+    border: 1px solid #ccc;
 }
 #behaviors tr.matched td, #behaviors tr.matched th {
     background: #eee;
@@ -35,12 +23,12 @@ thead td {
 <body>
 
 <article>
-<h1>Goal Math</h1>
+<h1>Basic Behavior</h1>
 
 <h2>Behavior Table</h2>
 
 <table id="behaviors">
-<thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action,<br>Parameter
+<thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
 
 <tbody>
 <tr><th>0, 0</th><td>-</td>
@@ -49,154 +37,14 @@ thead td {
 <tr><th>1, 1</th><td>B, 4.0</td>
 </table>
 
-<p>
-    <label><input type="checkbox" id="s1"> Sensor 1</label>,
-    <label><input type="checkbox" id="s2"> Sensor 2</label>
-    <button type="button" onclick="behaviorTable()">Act</button>
+<h2>Sensor State</h2>
+
+<p><label><input type="checkbox" id="s1"> Sensor 1</label>
+<p><label><input type="checkbox" id="s2"> Sensor 2</label>
 
 </article>
 
 <script>
-var values = [
-        {"val": 1.0, "p": 0.1},
-        {"val": 2.0, "p": 0.5},
-        {"val": 3.0, "p": 1.0},
-        {"val": 4.0, "p": 1.0},
-        {"val": 5.0, "p": 0.5},
-        {"val": 6.0, "p": 0.1}
-    ],
-    subjectiveSenses = [
-        function stress(val) {
-            if (val <= 4.0) {
-                return 0.0;
-            }
-            return Math.pow(val - 4.0, 2) * 0.1;
-        },
-        function energy(val) {
-            return val * 0.002;
-        },
-        function success(val) {
-            return box_muller()[0] + 6.0;
-        }
-    ],
-    sum,
-    lvls = [],
-    genRand = false;
-
-function box_muller() {
-    var x = 0, y = 0, r, c;
-
-    do {
-        x = Math.random() * 2 - 1;
-        y = Math.random() * 2 - 1;
-        r = x * x + y * y;
-    }
-    while (r == 0 || r > 1)
-
-    c = Math.sqrt(-2 * Math.log(r) / r);
-
-    return [x * c, y * c];
-}
-
-function generate(keepGoing, child) {
-    var result = document.createElement('p'),
-        val = getRandom();
-
-    if (keepGoing && !child) {
-        if (genRand) {
-            genRand = false;
-            document.getElementById('gen_lots').textContent = "generate lots";
-        } else {
-            genRand = true;
-            document.getElementById('gen_lots').textContent = "stop generating";
-        }
-    }
-    result.textContent = val;
-
-    displayResults(val);
-    if (keepGoing && genRand) {
-        window.setTimeout(function () {
-            generate(true, true);
-        }, 10);
-    }
-}
-
-function getRandom() {
-    var rnd = Math.random(),
-        ii,
-        len;
-
-    len = values.length;
-    for (ii = 0; ii < len; ii += 1) {
-        if (rnd < lvls[ii]) {
-            return ii;
-        }
-    }
-
-    return ii;
-}
-
-function displayBars() {
-    var varCells = document.querySelectorAll('#variableParams tbody td'), ii, len = values.length, val;
-    for (ii = 0; ii < len; ii += 1) {
-        val = (values[ii].p * 100.0).toPrecision(3);
-
-        if (val > 0.0) {
-            varCells[ii].style.background = "linear-gradient(0deg, gainsboro " + val + "%, white " + val + "%)";
-        } else {
-            varCells[ii].style.background = "";
-        }
-    }
-
-    document.getElementById('resolution').textContent = values.length;
-    document.getElementById('range').textContent = values[0].val.toPrecision(3) + " - " + values[values.length - 1].val.toPrecision(3);
-}
-
-function displayResults(index) {
-    var resCells = document.querySelectorAll("tfoot td");
-    resCells[index].innerHTML = parseInt(resCells[index].innerHTML, 10) + 1;
-}
-
-function ssEnergy() {
-    var dEnergy = parseInt(document.getElementById("energyChange").value, 10),
-        cEnergy = parseInt(document.getElementById("energyCurrent").value, 10),
-        tehFeels = 0.0;
-
-    if (dEnergy > 100.0 - cEnergy) {
-        dEnergy = 100.0 - cEnergy;
-    }
-    if (dEnergy < cEnergy * -1) {
-        dEnergy = cEnergy * -1;
-    }
-    document.getElementById("energyCurrent").value = cEnergy + dEnergy;
-    if (dEnergy < 0.0) {
-        tehFeels = dEnergy / cEnergy;
-    } else {
-        tehFeels = ((100 - cEnergy) * dEnergy) / 10000;
-    }
-    document.getElementById("ssEnergyResult").textContent = tehFeels;
-}
-
-function actionA() {
-    return [-0.01];
-}
-
-function actionB(param) {
-    var loss = param / 100.0 * -1,
-        gain = (parseFloat(param, 10) >= 3.0) ? 0.045 : 0.0;
-
-    document.getElementById("displaySsEnergyLoss").textContent = loss.toPrecision(2);
-    document.getElementById("displaySsEnergyGain").textContent = gain.toPrecision(2);
-    return [loss, gain];
-}
-
-function ssEnergyChange(aChanges) {
-    var netChange = aChanges.reduce(function (a, b) {
-        return a + parseFloat(b, 10);
-    }, 0.0);
-
-    return netChange;
-}
 
 function sensorText(el1, el2) {
     var textOut = "";
@@ -207,14 +55,7 @@ function sensorText(el1, el2) {
 
 function behaviorTable() {
     var textMatch = sensorText(document.getElementById('s1'), document.getElementById('s2')),
-        textAction = "",
-        arrAction,
-        sS = 0.0,
-        ssTotal = 0.0;
-
-    document.getElementById("displaySsEnergyLoss").textContent = "0.0";
-    document.getElementById("displaySsEnergyGain").textContent = "0.0";
-    document.getElementById("displaySsEnergyChange").textContent = "0.0";
+        textAction = "";
 
     [].forEach.call(document.querySelectorAll("#behaviors th"), function(el) {
         if (el.textContent === textMatch) {
@@ -225,43 +66,14 @@ function behaviorTable() {
         }
     });
 
-    arrAction = textAction.split(", ");
-    if (arrAction[0] === "A") {
-        sS = ssEnergyChange(actionA());
-        ssTotal += sS;
-        document.getElementById("displaySsEnergyLoss").textContent = sS.toPrecision(2);
-    }
-    if (arrAction[0] === "B") {
-        ssTotal += ssEnergyChange(actionB(arrAction[1]));
-    }
-
-    document.getElementById("displaySsEnergyChange").textContent = ssTotal.toPrecision(2);
 }
 
 function init() {
-    var sum;
-
+    document.getElementById('s1').onchange = behaviorTable;
+    document.getElementById('s2').onchange = behaviorTable;
     behaviorTable();
-
-    displayBars();
-
-    sum = values.reduce(function (a, b) {
-        return a + b.p;
-    }, 0.0);
-
-    values.forEach(function (lvl, index) {
-        if (index === 0) {
-            lvls.push(lvl.p);
-        } else {
-            lvls.push(lvl.p + lvls[index - 1]);
-        }
-    });
-
-    lvls = lvls.map(function (val) {
-        return val / sum;
-    });
 }
 
-init();
+window.onload = init;
 
 </script>
