@@ -48,12 +48,12 @@ input[type="number"] {
 
 <h2>Actions</h2>
 
-<p><button onclick="actions.A()">Action A</button>
+<p><button onclick="act('A')">Action A</button>
 <p>
-    <button onclick="actions.B()">Action B</button>
+    <button onclick="act('B', document.getElementById('actionBPower').value)">Action B</button>
     <label>Power: <input type="number" value="1.0" id="actionBPower"></label>
 
-<p><button onclick="act()">Action from Table</button>
+<p><button onclick="actFromTable()">Action from Table</button>
 
 <table id="behaviors">
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
@@ -82,11 +82,16 @@ var elSsEnergyLoss = document.getElementById("displaySsEnergyLoss"),
     elSsLog = document.getElementById("ssLog"),
     actions = {};
 
+function log(msg) {
+    var logLine = document.createTextNode(msg + "\n");
+    elSsLog.appendChild(logLine);
+    elSsLog.scrollTop = elSsLog.scrollHeight;
+}
+
 function totalEnergy() {
     var netEnergy = parseFloat(elSsEnergyLoss.textContent) + parseFloat(elSsEnergyGain.textContent);
     elSsEnergyTotal.textContent = netEnergy.toPrecision(2);
-    elSsLog.innerHTML = elSsLog.innerHTML + netEnergy.toPrecision(2) + " (energy)\n";
-    elSsLog.scrollTop = elSsLog.scrollHeight;
+    log("  ssEnergy: " + netEnergy.toPrecision(2));
 }
 
 actions.A = function actionA() {
@@ -111,15 +116,27 @@ function sensorText(el1, el2) {
     return textOut;
 }
 
-function act() {
-    var arrAction = document.querySelector(".matched td").textContent.split(", ");
+function act(actionType, actionParam) {
+    if (actionParam) {
+        actionParam = ", " + actionParam;
+    } else {
+        actionParam = "";
+    }
+    log("action: " + actionType + actionParam);
+    actions[actionType]();
+}
+
+function actFromTable() {
+    var arrAction = document.querySelector(".matched td").textContent.split(", "),
+        param = "";
 
     if (arrAction[1]) {
-        document.getElementById("actionBPower").value = arrAction[1];
+        param = arrAction[1];
+        document.getElementById("actionBPower").value = param;
     }
 
     if (arrAction[0] !== "-") {
-        actions[arrAction[0]]();
+        act(arrAction[0], param);
     }
 }
 

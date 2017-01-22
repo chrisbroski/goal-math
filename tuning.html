@@ -58,7 +58,7 @@ input[type="number"] {
 
 <table id="variableParams"></table>
 
-<p><label>Effect: <input type="number" value="0.50"></label>
+<p><label>Effect: <input type="number" value="10" id="effect"></label>
 
 <h2>Energy Loss/Gain</h2>
 
@@ -72,12 +72,12 @@ input[type="number"] {
 
 <h2>Actions</h2>
 
-<p><button onclick="actions.A()">Action A</button>
+<p><button onclick="act('A')">Action A</button>
 <p>
-    <button onclick="actions.B()">Action B</button>
+    <button onclick="act('B', document.getElementById('actionBPower').value)">Action B</button>
     <label>Power: <input type="number" value="1.0" id="actionBPower"></label>
 
-<p><button onclick="act()">Action from Table</button>
+<p><button onclick="actFromTable()">Action from Table</button>
 
 <table id="behaviors">
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
@@ -116,11 +116,58 @@ variables.B = [
     {"val": 6.0, "p": 0.0}
 ];
 
-function totalEnergy() {
-    var netEnergy = parseFloat(elSsEnergyLoss.textContent) + parseFloat(elSsEnergyGain.textContent);
-    elSsEnergyTotal.textContent = netEnergy.toPrecision(2);
-    elSsLog.innerHTML = elSsLog.innerHTML + netEnergy.toPrecision(2) + " (energy)\n";
+function log(msg) {
+    var logLine = document.createTextNode(msg + "\n");
+    elSsLog.appendChild(logLine);
     elSsLog.scrollTop = elSsLog.scrollHeight;
+}
+
+function getVar(vTable, val) {
+    var ii, len = vTable.length;
+    for (ii = 0; ii < len; ii += 1) {
+        if (vTable[ii].val === val) {
+            return vTable[ii];
+        }
+    }
+
+    return {};
+}
+
+function normalizeVariables() {
+    // check if any params are over 1.0
+    var highest = 0.0;
+    variables.B.forEach(function (p) {
+        if (p.p > highest) {
+            highest = p.p;
+        }
+    });
+
+    // if so, divide all by whatever is needed to normalize
+    if (highest > 1.0) {
+        variables.B = variables.B.map(function (p) {
+            return {"val": p.val, "p": p.p / parseFloat(highest)};
+        });
+    }
+}
+
+function totalEnergy(action, param) {
+    var netEnergy = parseFloat(elSsEnergyLoss.textContent) + parseFloat(elSsEnergyGain.textContent),
+        v,
+        effect;
+    elSsEnergyTotal.textContent = netEnergy.toPrecision(2);
+    if (action && param) {
+        effect = parseFloat(document.getElementById('effect').value);
+        // tune the variable
+        v = getVar(variables[action], param);
+        v.p = parseFloat(v.p) + netEnergy * effect;
+        if (v.p < 0.0) {
+            v.p = 0.0;
+        }
+        normalizeVariables(variables[action]);
+        clearTable(document.getElementById('variableParams'));
+        displayVariables();
+    }
+    log("  ssEnergy: " + netEnergy.toPrecision(2));
 }
 
 actions.A = function actionA() {
@@ -135,7 +182,7 @@ actions.B = function actionB() {
     if (elSensor1.checked) {
         elSsEnergyGain.textContent = (parseFloat(power, 10) >= 3.0) ? 0.045 : 0.0;
     }
-    totalEnergy();
+    totalEnergy("B", power);
 }
 
 function sensorText(el1, el2) {
@@ -163,7 +210,7 @@ function getRandom(vTable) {
             lvls.push(lvl.p + lvls[index - 1]);
         }
     });
-    
+
     lvls = lvls.map(function (val) {
         return val / sum;
     });
@@ -176,29 +223,39 @@ function getRandom(vTable) {
     }
 }
 
-function act() {
-    var arrAction = document.querySelector(".matched td").textContent.split(", ");
+function act(actionType, actionParam) {
+    if (actionParam) {
+        actionParam = ", " + actionParam;
+    } else {
+        actionParam = "";
+    }
+    log("action: " + actionType + actionParam);
+    actions[actionType]();
+}
+
+function actFromTable() {
+    var arrAction = document.querySelector(".matched td").textContent.split(", "),
+        param = "";
 
     if (arrAction[1]) {
-        document.getElementById("actionBPower").value = getRandom(arrAction[0]).toPrecision(2);
+        if (arrAction[1] === "vt1") {
+            param = getRandom(arrAction[0]);
+        }
+        document.getElementById("actionBPower").value = param;
     }
 
     if (arrAction[0] !== "-") {
-        actions[arrAction[0]]();
+        act(arrAction[0], param);
     }
 }
 
-function displayBars() {
-    var varCells = document.querySelectorAll('#variableParams tbody td'), ii, len = variables.B.length, val;
-    for (ii = 0; ii < len; ii += 1) {
-        val = (variables.B[ii].p * 100.0).toPrecision(3);
+function clearTable(t) {
+    /*var thead = t.getElementsByTagName('thead')[0],
+        tbody = t.getElementsByTagName('tbody')[0];
 
-        if (val > 0.0) {
-            varCells[ii].style.background = "linear-gradient(0deg, gainsboro " + val + "%, white " + val + "%)";
-        } else {
-            varCells[ii].style.background = "";
-        }
-    }
+    t.removeChild(thead);
+    t.removeChild(tbody);*/
+    while(t.rows[0]) t.deleteRow(0);
 }
 
 function displayVariables() {
@@ -208,7 +265,9 @@ function displayVariables() {
         varTbody = document.createElement("tbody"),
         varTbodyRow = varTbody.insertRow();
 
-    varTable.innerHTMl = "";
+    //varTable.appendChild(document.createElement('thead'));
+    //varTable.appendChild(document.createElement('tbody'));
+
     variables.B.forEach(function (v) {
         var theadCell = varTheadRow.insertCell(),
             tbodyCell = varTbodyRow.insertCell(),
@@ -241,14 +300,12 @@ function behaviorTable() {
             el.parentElement.className = "";
         }
     });
-
 }
 
 function init() {
     document.getElementById('s1').onchange = behaviorTable;
     document.getElementById('s2').onchange = behaviorTable;
     behaviorTable();
-    //displayBars();
     displayVariables();
 }
 
