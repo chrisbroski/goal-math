@@ -8,7 +8,7 @@
 <style type="text/css">
 #variableParams {
     table-layout: fixed;
-    width: 320px;
+    width: 360px;
     border-collapse: collapse;
 }
 #variableParams th, #variableParams td {
@@ -24,16 +24,16 @@
     border-top: 1px solid #eee;
 }
 
-#behaviors thead td {
+.data thead td {
     padding: 8px;
     font-weight: bold;
 }
-#behaviors td, th {
+.data td, .data th {
     text-align: center;
     font-weight: normal;
     border: 1px solid #ccc;
 }
-#behaviors tr.matched td, #behaviors tr.matched th {
+.data tr.matched td, .data tr.matched th {
     background: #eee;
 }
 input[type="number"] {
@@ -44,7 +44,7 @@ input[type="number"] {
     padding: 4px;
     background: #333;
     color: #fff;
-    width: 300px; height: 180px;
+    width: 360px; height: 180px;
     overflow: auto;
 }
 </style>
@@ -52,46 +52,66 @@ input[type="number"] {
 <body>
 
 <article>
-<h1>Tuning Variables</h1>
+<h1>Virtual Subjective Senses</h1>
+
+<h2>Opinions (Virtual Subjective Senses)</h2>
+
+<table id="vss" class="data">
+<thead><tr><td>Situation</td><td>Associated Subjective Sense</td></tr></thead>
+<tbody>
+    <tr><th>0, 0</th><td>0.0</td></tr>
+    <tr><th>0, 1</th><td>0.0</td></tr>
+    <tr><th>1, 0</th><td>0.0</td></tr>
+    <tr><th>1, 1</th><td>0.0</td></tr>
+</tbody>
+</table>
 
 <h2>Variable Parameters for Action B</h2>
 
 <table id="variableParams"></table>
 
+<p><p><button onclick="turn()">Turn</button>
 <p><label>Effect: <input type="number" value="10" id="effect"></label>
 
-<h2>Log</h2>
+<h2>Subjective Sense Log</h2>
 <pre id="ssLog"></pre>
 
-<p><button onclick="actFromTable()">Action from Table</button>
-
-<table id="behaviors">
+<table id="behaviors" class="data">
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
 
 <tbody>
-<tr><th>0, 0</th><td>-</td>
+<tr><th>0, 0</th><td>X</td>
 <tr><th>0, 1</th><td>A</td>
 <tr><th>1, 0</th><td>B, vt1</td>
 <tr><th>1, 1</th><td>B, vt1</td>
 </table>
 
-<h2>Sensor State</h2>
+<!--<h2>Sensor State</h2>
 
 <p><label><input type="checkbox" id="s1"> Sensor 1</label>
-<p><label><input type="checkbox" id="s2"> Sensor 2</label>
+<p><label><input type="checkbox" id="s2"> Sensor 2</label>-->
 
 </article>
 
 <script>
+
 /*
-This would be cool - increase resolution of variable parameters when < 3
+Oh god, does everything I do create more questions than it answers?
+
+I need to add actions changing sensors
+"Act from table" should change to "take a turn"
+
+Let's start with 25% chance for each situation: 00, 01, 10, 11
+Move A will change into a 10 or 11 (50%)
+Move B params over minimum will increase the likelihood of a 11 turning into a 01
+Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automatically
 */
 
 var actionBPower = 1.0,
     energyLoss,
     energyGain,
-    elSensor1 = document.getElementById("s1"),
-    elSensor2 = document.getElementById("s2"),
+    s1,
+    s2,
     elSsLog = document.getElementById("ssLog"),
     actions = {},
     variables = {};
@@ -139,6 +159,24 @@ function normalizeVariables() {
     }
 }
 
+function vss(ss) {
+    var situation = document.querySelector(".matched th").textContent,
+        vssRows = document.querySelectorAll("#vss tbody tr"),
+        ii,
+        len = vssRows.length,
+        existingVss,
+        newVss;
+
+    for (ii = 0; ii < len; ii += 1) {
+        if (vssRows[ii].getElementsByTagName("th")[0].textContent === situation) {
+            existingVss = parseFloat(vssRows[ii].getElementsByTagName("td")[0].textContent);
+            newVss = (existingVss + ss) / 2;
+            vssRows[ii].getElementsByTagName("td")[0].textContent = newVss.toPrecision(3)
+            return;
+        }
+    }
+}
+
 function totalEnergy(action, param) {
     var netEnergy = energyLoss + energyGain,
         v,
@@ -156,29 +194,31 @@ function totalEnergy(action, param) {
         clearTable(document.getElementById('variableParams'));
         displayVariables();
     }
+    vss(netEnergy);
     log("  ssEnergy: " + netEnergy.toPrecision(2));
 }
 
-actions.A = function actionA() {
+actions.X = function () {
+    energyLoss = -0.001;
+    energyGain = 0.00;
+    totalEnergy("X");
+}
+
+actions.A = function () {
     energyLoss = -0.01;
-    energyGain = 0.0;
-    totalEnergy();
+    energyGain = 0.00;
+    totalEnergy("A");
 }
 
-actions.B = function actionB() {
-    var power = actionBPower;
-    energyLoss = power / 100.0 * -1;
-    if (elSensor1.checked) {
-        energyGain = (power >= 3.0) ? 0.045 : 0.0;
+actions.B = function () {
+    energyLoss = actionBPower / 100.0 * -1;
+
+    if (s1) {
+        energyGain = (actionBPower >= 3.0) ? 0.045 : 0.0;
+    } else {
+        energyGain = 0.0;
     }
-    totalEnergy("B", power);
-}
-
-function sensorText(el1, el2) {
-    var textOut = "";
-    textOut = el1.checked ? "1, " : "0, ";
-    textOut += el2.checked ? "1" : "0";
-    return textOut;
+    totalEnergy("B", actionBPower);
 }
 
 function getRandom(vTable) {
@@ -235,15 +275,12 @@ function actFromTable() {
 
     if (arrAction[0] !== "-") {
         act(arrAction[0], param);
+    } else {
+
     }
 }
 
 function clearTable(t) {
-    /*var thead = t.getElementsByTagName('thead')[0],
-        tbody = t.getElementsByTagName('tbody')[0];
-
-    t.removeChild(thead);
-    t.removeChild(tbody);*/
     while(t.rows[0]) t.deleteRow(0);
 }
 
@@ -253,9 +290,6 @@ function displayVariables() {
         varTheadRow = varThead.insertRow(),
         varTbody = document.createElement("tbody"),
         varTbodyRow = varTbody.insertRow();
-
-    //varTable.appendChild(document.createElement('thead'));
-    //varTable.appendChild(document.createElement('tbody'));
 
     variables.B.forEach(function (v) {
         var theadCell = varTheadRow.insertCell(),
@@ -278,7 +312,7 @@ function displayVariables() {
 }
 
 function behaviorTable() {
-    var textMatch = sensorText(document.getElementById('s1'), document.getElementById('s2')),
+    var textMatch = s1 + ", " + s2,
         textAction = "";
 
     [].forEach.call(document.querySelectorAll("#behaviors th"), function(el) {
@@ -289,13 +323,30 @@ function behaviorTable() {
             el.parentElement.className = "";
         }
     });
+    actFromTable();
+}
+
+function turn() {
+    var rnd1 = Math.random(),
+        rnd2 = Math.random();
+
+    s1 = 0;
+    s2 = 0;
+    if (rnd1 > 0.500000000) {
+        s1 = 1;
+    }
+    if (rnd2 > 0.500000000) {
+        s2 = 1;
+    }
+    behaviorTable();
 }
 
 function init() {
-    document.getElementById('s1').onchange = behaviorTable;
-    document.getElementById('s2').onchange = behaviorTable;
-    behaviorTable();
-    displayVariables();
+    //document.getElementById('s1').onchange = behaviorTable;
+    //document.getElementById('s2').onchange = behaviorTable;
+    //behaviorTable();
+    //displayVariables();
+    turn();
 }
 
 window.onload = init;
