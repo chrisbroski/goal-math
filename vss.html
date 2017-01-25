@@ -80,16 +80,11 @@ input[type="number"] {
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
 
 <tbody>
-<tr><th>0, 0</th><td>X</td>
+<tr class="matched"><th>0, 0</th><td>X</td>
 <tr><th>0, 1</th><td>A</td>
-<tr><th>1, 0</th><td>B, vt1</td>
-<tr><th>1, 1</th><td>B, vt1</td>
+<tr><th>1, 0</th><td>B</td>
+<tr><th>1, 1</th><td>B</td>
 </table>
-
-<!--<h2>Sensor State</h2>
-
-<p><label><input type="checkbox" id="s1"> Sensor 1</label>
-<p><label><input type="checkbox" id="s2"> Sensor 2</label>-->
 
 </article>
 
@@ -98,23 +93,52 @@ input[type="number"] {
 /*
 Oh god, does everything I do create more questions than it answers?
 
-I need to add actions changing sensors
-"Act from table" should change to "take a turn"
-
 Let's start with 25% chance for each situation: 00, 01, 10, 11
 Move A will change into a 10 or 11 (50%)
 Move B params over minimum will increase the likelihood of a 11 turning into a 01
 Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automatically
 */
 
-var actionBPower = 1.0,
-    energyLoss,
-    energyGain,
-    s1,
-    s2,
-    elSsLog = document.getElementById("ssLog"),
+/*
+"current state": situation, previous situation, action, action parameters, subjective senses, action effects
+"persistent table" data: behaviors, variable parameters, actions
+"logical flow": consistent order of actions that should work step-wise or time interval
+
+    1. generate situation
+        a. take into account effects from actions
+        b. set state: situation and previous situation
+    2. Handle subjective sense data
+        a. Add VSS to CSSA *
+        b. Aggregate CSSA *
+        c. Tune action parameters
+        d. Calculate and update VSS for previous situation
+        e. Clear CSSA
+    3. check behavior table
+    4. perform action
+        a. set state: current action
+        b. get proper variable parameters
+        c. set state: variable parameters
+        d. set state: action effects
+
+TODO:
+
+    add vss to current ss array
+    variable action parameters should be based on action AND situation
+    vss should be from a table with HTML render
+    behavior table should be a data table with HTML render
+*/
+
+var elSsLog = document.getElementById("ssLog"),
     actions = {},
-    variables = {};
+    variables = {},
+    current = {
+        situation: [0, 0],
+        previous_situation: [0, 0],
+        action: "X",
+        action_parameter: 0.0,
+        subjective_senses: [],
+        action_effects: [1.0, 1.0]
+    };
 
 variables.B = [
     {"val": 1.0, "p": 0.0},
@@ -177,62 +201,46 @@ function vss(ss) {
     }
 }
 
-function totalEnergy(action, param) {
-    var netEnergy = energyLoss + energyGain,
-        v,
-        effect;
-
-    if (action && param) {
-        effect = parseFloat(document.getElementById('effect').value);
-        // tune the variable
-        v = getVar(variables[action], param);
-        v.p = parseFloat(v.p) + netEnergy * effect;
-        if (v.p < 0.0) {
-            v.p = 0.0;
-        }
-        normalizeVariables(variables[action]);
-        clearTable(document.getElementById('variableParams'));
-        displayVariables();
-    }
-    vss(netEnergy);
-    log("  ssEnergy: " + netEnergy.toPrecision(2));
-}
-
 actions.X = function () {
-    energyLoss = -0.001;
-    energyGain = 0.00;
-    totalEnergy("X");
+    current.subjective_senses.push(-0.001);
 }
 
 actions.A = function () {
-    energyLoss = -0.01;
-    energyGain = 0.00;
-    totalEnergy("A");
+    current.subjective_senses.push(-0.01);
+    current.action_effects[0] = 2.0;
 }
 
 actions.B = function () {
-    energyLoss = actionBPower / 100.0 * -1;
+    current.subjective_senses.push(current.action_parameter / 100.0 * -1);
 
-    if (s1) {
-        energyGain = (actionBPower >= 3.0) ? 0.045 : 0.0;
-    } else {
-        energyGain = 0.0;
+    if (current.situation[0]) {
+        current.subjective_senses.push((current.action_parameter >= 3.0) ? 0.045 : 0.0);
     }
-    totalEnergy("B", actionBPower);
 }
 
-function getRandom(vTable) {
-    var rnd = Math.random(),
-        sum,
-        lvls = [],
-        ii,
-        len;
+function getFirstOver(a, threshold) {
+    var ii, len = a.length;
+    for (ii = 0; ii < len; ii += 1) {
+        if (threshold < a[ii]) {
+            return ii;
+        }
+    }
+    return -1;
+}
 
-    sum = variables[vTable].reduce(function (a, b) {
+function getVariableParam() {
+    var sum,
+        lvls = [];
+
+    if (!variables[current.action]) {
+        return 0.0;
+    }
+
+    sum = variables[current.action].reduce(function (a, b) {
         return a + b.p;
     }, 0.0);
 
-    variables[vTable].forEach(function (lvl, index) {
+    variables[current.action].forEach(function (lvl, index) {
         if (index === 0) {
             lvls.push(lvl.p);
         } else {
@@ -244,44 +252,30 @@ function getRandom(vTable) {
         return val / sum;
     });
 
-    len = variables[vTable].length;
-    for (ii = 0; ii < len; ii += 1) {
-        if (rnd < lvls[ii]) {
-            return variables[vTable][ii].val;
-        }
-    }
+    return variables[current.action][getFirstOver(lvls, Math.random())].val;
 }
 
-function act(actionType, actionParam) {
-    if (actionParam) {
-        actionParam = ", " + actionParam;
+function act() {
+    var action_msg;
+
+    // clear previous action effects
+    current.action_effects[0] = 1.0;
+    current.action_effects[1] = 1.0;
+
+    if (current.action_parameter) {
+        action_msg = current.action + ", " + current.action_parameter;
     } else {
-        actionParam = "";
+        action_msg = current.action;
     }
-    log("action: " + actionType + actionParam);
-    actions[actionType]();
-}
+    log("action: " + action_msg);
 
-function actFromTable() {
-    var arrAction = document.querySelector(".matched td").textContent.split(", "),
-        param;
-
-    if (arrAction[1]) {
-        if (arrAction[1] === "vt1") {
-            param = getRandom(arrAction[0]);
-        }
-        actionBPower = param;
-    }
-
-    if (arrAction[0] !== "-") {
-        act(arrAction[0], param);
-    } else {
-
-    }
+    actions[current.action]();
 }
 
 function clearTable(t) {
-    while(t.rows[0]) t.deleteRow(0);
+    while (t.rows.length > 0) {
+        t.deleteRow(0);
+    }
 }
 
 function displayVariables() {
@@ -312,42 +306,65 @@ function displayVariables() {
 }
 
 function behaviorTable() {
-    var textMatch = s1 + ", " + s2,
-        textAction = "";
+    var textMatch = current.situation[0] + ", " + current.situation[1];
 
+    // reset current action state
+    current.action = "X";
+
+    // find behavior - this should be done in a data structure and not an HTML table
     [].forEach.call(document.querySelectorAll("#behaviors th"), function(el) {
         if (el.textContent === textMatch) {
             el.parentElement.className = "matched";
-            textAction = el.nextSibling.textContent;
+            current.action = el.nextSibling.textContent;
         } else {
             el.parentElement.className = "";
         }
     });
-    actFromTable();
+
+    current.action_parameter = getVariableParam();
+}
+
+function generateSituation() {
+    current.previous_situation = current.situation;
+    current.situation = current.situation.map(function (perception, index) {
+        var rnd = Math.random(),
+            likelihood = 0.500000000; // this is a product of the environment
+        return (rnd * current.action_effects[index] > likelihood) ? 1 : 0;
+    });
+}
+
+function subjectiveSenses() {
+    var ssAggregate = current.subjective_senses.reduce(function (a, b) {
+            return a + b;
+        }, 0.0),
+        v,
+        effect;
+
+    if (current.action_parameter) {
+        effect = parseFloat(document.getElementById('effect').value);
+        // tune the variable
+        v = getVar(variables[current.action], current.action_parameter);
+        v.p = parseFloat(v.p) + ssAggregate * effect;
+        if (v.p < 0.0) {
+            v.p = 0.0;
+        }
+        normalizeVariables(variables[current.action_parameter]);
+    }
+    clearTable(document.getElementById('variableParams'));
+    displayVariables();
+    vss(ssAggregate);
+    console.log(JSON.stringify(current));
+    // Clear persistent subjective senses
+    current.subjective_senses.length = 0;
+    log("  ssEnergy: " + ssAggregate.toPrecision(2));
 }
 
 function turn() {
-    var rnd1 = Math.random(),
-        rnd2 = Math.random();
-
-    s1 = 0;
-    s2 = 0;
-    if (rnd1 > 0.500000000) {
-        s1 = 1;
-    }
-    if (rnd2 > 0.500000000) {
-        s2 = 1;
-    }
+    generateSituation();
+    subjectiveSenses();
     behaviorTable();
+    act();
 }
 
-function init() {
-    //document.getElementById('s1').onchange = behaviorTable;
-    //document.getElementById('s2').onchange = behaviorTable;
-    //behaviorTable();
-    //displayVariables();
-    turn();
-}
-
-window.onload = init;
+window.onload = turn;
 </script>
