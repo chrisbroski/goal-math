@@ -6,6 +6,11 @@
 <title>Goal Mathematics - Tuning Variables</title>
 <link rel="stylesheet" href="simple.css">
 <style type="text/css">
+h2 {
+    font-size: 24px;
+    font-weight: normal;
+}
+
 #variableParams {
     table-layout: fixed;
     width: 360px;
@@ -66,15 +71,12 @@ input[type="number"] {
 </tbody>
 </table>
 
-<h2>Variable Parameters for Action B</h2>
-
-<table id="variableParams"></table>
+<h2>Variable Parameters for Action <span id="vpAction"></span>, Situation: <span id="vpSituation"></span></h2>
+<p><select id="selectVarParam"></select>
+<table id="variableParams"><thead></thead><tbody></tbody></table>
 
 <p><p><button onclick="turn()">Turn</button>
 <p><label>Effect: <input type="number" value="10" id="effect"></label>
-
-<h2>Subjective Sense Log</h2>
-<pre id="ssLog"></pre>
 
 <table id="behaviors" class="data">
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
@@ -108,8 +110,8 @@ Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automat
         a. take into account effects from actions
         b. set state: situation and previous situation
     2. Handle subjective sense data
-        a. Add VSS to CSSA *
-        b. Aggregate CSSA *
+        * a. Add VSS to CSSA *
+        * b. Aggregate CSSA *
         c. Tune action parameters
         d. Calculate and update VSS for previous situation
         e. Clear CSSA
@@ -123,7 +125,7 @@ Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automat
 TODO:
 
     add vss to current ss array
-    variable action parameters should be based on action AND situation
+    * variable action parameters should be based on action AND situation
     vss should be from a table with HTML render
     behavior table should be a data table with HTML render
 */
@@ -140,7 +142,10 @@ var elSsLog = document.getElementById("ssLog"),
         action_effects: [1.0, 1.0]
     };
 
-variables.B = [
+var turn_count = 1;
+
+variables.B = {};
+variables.B["1, 1"] = [
     {"val": 1.0, "p": 0.0},
     {"val": 2.0, "p": 0.5},
     {"val": 3.0, "p": 0.5},
@@ -148,12 +153,14 @@ variables.B = [
     {"val": 5.0, "p": 0.0},
     {"val": 6.0, "p": 0.0}
 ];
-
-function log(msg) {
-    var logLine = document.createTextNode(msg + "\n");
-    elSsLog.appendChild(logLine);
-    elSsLog.scrollTop = elSsLog.scrollHeight;
-}
+variables.B["1, 0"] = [
+    {"val": 1.0, "p": 0.0},
+    {"val": 2.0, "p": 0.5},
+    {"val": 3.0, "p": 0.5},
+    {"val": 4.0, "p": 0.5},
+    {"val": 5.0, "p": 0.0},
+    {"val": 6.0, "p": 0.0}
+];
 
 function getVar(vTable, val) {
     var ii, len = vTable.length;
@@ -168,8 +175,8 @@ function getVar(vTable, val) {
 
 function normalizeVariables() {
     // check if any params are over 1.0
-    var highest = 0.0;
-    variables.B.forEach(function (p) {
+    var highest = 0.0, var_params = variables.B[current.situation.join(", ")];
+    var_params.forEach(function (p) {
         if (p.p > highest) {
             highest = p.p;
         }
@@ -177,7 +184,7 @@ function normalizeVariables() {
 
     // if so, divide all by whatever is needed to normalize
     if (highest > 1.0) {
-        variables.B = variables.B.map(function (p) {
+        variables.B[current.situation.join(", ")] = var_params.map(function (p) {
             return {"val": p.val, "p": p.p / parseFloat(highest)};
         });
     }
@@ -230,17 +237,19 @@ function getFirstOver(a, threshold) {
 
 function getVariableParam() {
     var sum,
-        lvls = [];
+        lvls = [],
+        var_params;
 
     if (!variables[current.action]) {
         return 0.0;
     }
 
-    sum = variables[current.action].reduce(function (a, b) {
+    var_params = variables[current.action][current.situation.join(", ")];
+    sum = var_params.reduce(function (a, b) {
         return a + b.p;
     }, 0.0);
 
-    variables[current.action].forEach(function (lvl, index) {
+    var_params.forEach(function (lvl, index) {
         if (index === 0) {
             lvls.push(lvl.p);
         } else {
@@ -252,7 +261,7 @@ function getVariableParam() {
         return val / sum;
     });
 
-    return variables[current.action][getFirstOver(lvls, Math.random())].val;
+    return var_params[getFirstOver(lvls, Math.random())].val;
 }
 
 function act() {
@@ -267,7 +276,7 @@ function act() {
     } else {
         action_msg = current.action;
     }
-    log("action: " + action_msg);
+    console.log("action: " + action_msg);
 
     actions[current.action]();
 }
@@ -278,27 +287,41 @@ function clearTable(t) {
     }
 }
 
-function displayVariables() {
-    var varTable = document.getElementById("variableParams"),
-        varThead = document.createElement("tfoot"),
-        varTheadRow = varThead.insertRow(),
-        varTbody = document.createElement("tbody"),
-        varTbodyRow = varTbody.insertRow();
+function displayVariables(action, situation) {
+    var varTable, varThead, varTheadRow, varTbody, varTbodyRow, theadCell, tbodyCell;
 
-    variables.B.forEach(function (v) {
-        var theadCell = varTheadRow.insertCell(),
-            tbodyCell = varTbodyRow.insertCell(),
-            val = (v.p * 100.0).toPrecision(3);
+    document.getElementById("vpSituation").textContent = situation;
+    document.getElementById("vpAction").textContent = action;
+    varTable = document.getElementById("variableParams");
+    clearTable(varTable);
+    varThead = document.querySelector("#variableParams thead");
+    varTheadRow = varThead.insertRow();
+    varTbody = document.querySelector("#variableParams tbody");
+    varTbodyRow = varTbody.insertRow();
 
-            theadCell.textContent = v.val.toPrecision(2);
+    if (!variables[action]) {
+        theadCell = varTheadRow.insertCell();
+        theadCell.textContent = "No variable parameters.";
+        tbodyCell = varTbodyRow.insertCell();
+        tbodyCell.innerHTML = "&nbsp;"
+        return;
+    }
 
-            if (val > 0.0) {
-                tbodyCell.style.background = "linear-gradient(0deg, gainsboro " + val + "%, #fafafa " + val + "%)";
-            } else {
-                tbodyCell.style.background = "";
-            }
+    variables[action][situation].forEach(function (v) {
+        var val = (v.p * 100.0).toPrecision(3);
 
-            tbodyCell.textContent = v.p.toPrecision(2);
+        theadCell = varTheadRow.insertCell();
+        tbodyCell = varTbodyRow.insertCell();
+
+        theadCell.textContent = v.val.toPrecision(2);
+
+        if (val > 0.0) {
+            tbodyCell.style.background = "linear-gradient(0deg, gainsboro " + val + "%, #fafafa " + val + "%)";
+        } else {
+            tbodyCell.style.background = "";
+        }
+
+        tbodyCell.textContent = v.p.toPrecision(2);
     });
 
     varTable.appendChild(varThead);
@@ -306,7 +329,7 @@ function displayVariables() {
 }
 
 function behaviorTable() {
-    var textMatch = current.situation[0] + ", " + current.situation[1];
+    var textMatch = current.situation.join(", ");
 
     // reset current action state
     current.action = "X";
@@ -343,28 +366,52 @@ function subjectiveSenses() {
     if (current.action_parameter) {
         effect = parseFloat(document.getElementById('effect').value);
         // tune the variable
-        v = getVar(variables[current.action], current.action_parameter);
+        v = getVar(variables[current.action][current.situation.join(", ")], current.action_parameter);
         v.p = parseFloat(v.p) + ssAggregate * effect;
         if (v.p < 0.0) {
             v.p = 0.0;
         }
-        normalizeVariables(variables[current.action_parameter]);
+        normalizeVariables();
     }
-    clearTable(document.getElementById('variableParams'));
-    displayVariables();
+
+    displayVariables(current.action, current.situation.join(", "));
     vss(ssAggregate);
-    console.log(JSON.stringify(current));
+    //console.log(JSON.stringify(current));
     // Clear persistent subjective senses
     current.subjective_senses.length = 0;
-    log("  ssEnergy: " + ssAggregate.toPrecision(2));
+    console.log("  ssEnergy: " + ssAggregate.toPrecision(2));
 }
 
 function turn() {
+    console.log("turn", turn_count);
+    turn_count += 1;
     generateSituation();
-    subjectiveSenses();
     behaviorTable();
     act();
+    subjectiveSenses();
 }
 
-window.onload = turn;
+function init() {
+    var a, b, opt, optgroup, sel = document.getElementById("selectVarParam");
+    for (a in variables) {
+        if (variables.hasOwnProperty(a)) {
+            optgroup = document.createElement("optgroup");
+            optgroup.label = "Action " + a;
+
+            for (b in variables[a]) {
+                if (variables[a].hasOwnProperty(b)) {
+                    opt = document.createElement("option");
+                    opt.value = a + ":" + b;
+                    opt.textContent = b;
+                    optgroup.appendChild(opt);
+                }
+            }
+
+            sel.appendChild(optgroup);
+        }
+    }
+    turn();
+}
+
+window.onload = init;
 </script>
