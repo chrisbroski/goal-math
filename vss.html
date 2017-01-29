@@ -24,7 +24,7 @@ h2 {
     font-weight: bold;
 }
 #variableParams tbody td {
-    height: 200px;
+    height: 160px;
     background: #fafafa;
 }
 #variableParams td.current-param {
@@ -69,6 +69,7 @@ input[type="number"] {
     <button onclick="turn()">One Turn</button>
     <button onclick="turn(99)">100 Turns</button>
     Total Turn Count: <span id="turn-count"></span>
+<p>Current Situation: <span id="display-situation"></span>
 
 <h2>Opinions (Virtual Subjective Senses)</h2>
 
@@ -394,13 +395,43 @@ function generateSituation() {
             likelihood = 0.500000000; // this is a product of the environment
         return (rnd * current.consequences[index] > likelihood) ? 1 : 0;
     });
+    document.getElementById("display-situation").textContent = current.result.join(", ");
     console.log("result situation: ", current.result.join(", "));
 }
 
+function aggregateSs(group) {
+    group = group.map(function (feeling) {
+        return Math.abs(feeling);
+    });
+
+    group.sort(function (a, b) {
+        return b - a;
+    });
+
+    return group.reduce(function (a, b) {
+        return b * (1.0 - a) + a;
+    }, 0.0);
+}
+
+function aggregateCurrentSs() {
+    var pleasure = [],
+        pain = [];
+
+    current.subjective_senses.forEach(function (feeling) {
+        if (feeling > 0.0) {
+            pleasure.push(feeling);
+        } else {
+            pain.push(feeling);
+        }
+    });
+
+    return aggregateSs(pleasure) - aggregateSs(pain);
+}
+
 function subjectiveSenses() {
-    var ssAggregate = current.subjective_senses.reduce(function (a, b) {
+    var ssAggregate = aggregateCurrentSs(),/*current.subjective_senses.reduce(function (a, b) {
             return a + b;
-        }, 0.0),
+        }, 0.0),*/
         varParam,
         v;
 
@@ -425,11 +456,12 @@ function subjectiveSenses() {
 }
 
 function currentVss() {
-    var vssRows = document.querySelectorAll("#vss tbody tr"), ii, len = vssRows.length, vssVal;
+    var vssRows = document.querySelectorAll("#vss tbody tr"), ii, len = vssRows.length, vssSit, vssVal;
     for (ii = 0; ii < len; ii += 1) {
-        vssVal = vssRows[ii].getElementsByTagName("th")[0].textContent;
-        console.log(current.result.join(", "), vssRows[ii].getElementsByTagName("th")[0].textContent);
-        if (current.result.join(", ") === vssVal) {
+        vssSit = vssRows[ii].getElementsByTagName("th")[0].textContent;
+        vssVal = vssRows[ii].getElementsByTagName("td")[0].textContent;
+        console.log(current.result.join(", "), vssSit, vssVal);
+        if (current.result.join(", ") === vssSit) {
             return parseFloat(vssVal) / 100;
         }
     }
@@ -443,7 +475,7 @@ function turn(amount) {
     turn_count += 1;
 
     generateSituation();
-    current.subjective_senses.push(currentVss());
+    current.subjective_senses.push(currentVss() * 0.5);
     subjectiveSenses();
     behaviorTable();
     act();
