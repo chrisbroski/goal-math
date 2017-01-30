@@ -4,6 +4,10 @@
 
 ## How can mindless mathematical laws give rise to aims and intention?
 
+### Abstract
+
+There are three main ways for a constructed device to manifest desire. All constructed objects have their creator's goals implied in their physical design and behavior but they aren't necessarily able to feel those instinctual desires themselves. For a machine to have emotional desire, it requires specialized sensors that evaluate situations that increase or decrease the probability of furthering their primary goal. Data from these subjective sensors can be used to fine-tune behaviors and create new subjective sensors by associating objective situations to subjective sensations. To exhibit conscious desire, data must exist to predict resulting situations from the combination of an action and the current situation.
+
 1. What is a goal?
 2. Externally designed
 3. Tuning behavior with subjective senses
@@ -33,15 +37,17 @@ Where I am going with this? All well-designed objects have a purpose that is dis
 
 ### Basic Behavior
 
-The simplest behavior mechanism starts with sensory data. For our examples, let's say that they intelligent artifact we are constructing has two types of sensors: A and B. Each of these has boolean output&mdash;They read either true or false. Our also has two actions it can execute: X and Y. Both of these actions also has a numeric parameter that indicates a specific of that action: speed, direction, duration, etc. That's all we need to design some simple behaviors.
+For my examples, I am going to use a turn-based simple world where our creature can perceive two things both of which have a boolean value of 0 or 1.
+
+<!--The simplest behavior mechanism starts with sensory data. For our examples, let's say that they intelligent artifact we are constructing has two types of sensors: A and B. Each of these has boolean output&mdash;They read either true or false. Our also has two actions it can execute: X and Y. Both of these actions also has a numeric parameter that indicates a specific of that action: speed, direction, duration, etc. That's all we need to design some simple behaviors. -->
 
 <table>
 <thead><tr><td>Situation (Sensor 1, 2)<td>Action, Parameters
 <tbody>
-<tr><td>0, 0<td>-
-<tr><td>0, 1<td>A, 3.0
-<tr><td>1, 0<td>B, 1.0
-<tr><td>1, 1<td>B, 2.0
+<tr><td>0, 0<td>A
+<tr><td>0, 1<td>A
+<tr><td>1, 0<td>B
+<tr><td>1, 1<td>B
 </table>
 
 A basic table of behaviors consists of a *situation*&mdash;a set of coinciding sensor data, and a corresponding action and any specific parameters it requires.
@@ -55,7 +61,7 @@ The first think we will have to give our creation is freedom to make choices on 
               |    |    |
         -----------------------
         1.0  2.0  3.0  4.0  5.0
-        Action A Parameter Value
+        Action B Parameter Value
 
 The probability values can be any number because they are relative to each other. In the above example, there is an equal probability to choose each parameter value. We can calculate an absolute probability by simply dividing a selected relative probability by the sum of all relative probabilities.
 
@@ -71,18 +77,24 @@ A subjective sense should return an **intensity** value between 1.0 to -1.0.
 * **0.0** indicates no change in the quest of accomplishing its primary goal.
 * **-1.0** is the worst thing that could possibly happen: death and dismemberment, all previous accomplishments destroyed and other horrible disasters.
 
-An aggregate of all subjective sensory data is the measurement of whether the creature feels good, indifferent, or bad. They are feelings of pleasure and pain.
+An aggregate of all subjective sensory data is the measurement of whether the creature feels good, indifferent, or bad. They are feelings of pleasure and pain. These values should be tuned for the best results, but these simple formulas should be enough for our example. Let's give our creature two actions: A and B (each with a single numeric parameter) and give each a subjective sense response.
 
- Most strategies will need many types of indicators to assess if it is on the right path, but in my simple example, I'll just use one based on stored energy. Most intelligent things require fuel to power their actions. Without a source of stored energy, accomplishing their goal will be impossible. Let's first give our critter a subjective sense that sends positive and negative indicators when energy is gained and lost, respectively.<!-- Another good indication that you may not accomplish your goal is if you get damaged. Let's also include a damage indicator to detect stress on the structure of the the thing.
+    A: -0.001 - parameter * 0.002
+    B: parameter * -0.01 + (if parameter >= 3.0: 0.05)
 
-Let's design our energy based subjective sense to be proportional to the current level of energy storage i.e. gaining or losing 1% of the maximum stored energy will have a stronger effect when storage levels are low.
+The numeric parameter is retrieved from a separate variable parameters table for each situation. For example, for the "1, 1" situation, action B will be executed with a parameter from table 2. If the variable parameter is 3.0 (a 1 in 3 initial chance) then the resulting subjective sense value will be (from table 3) -0.01 + 0.05 or 0.045.
 
-    ssEnergyLoss = % lost / % stored
+#### Variable Parameter Tuning
 
-    ssEnergyGain = ((100 - % stored) * % gained) / 10000-->
+There would be no point to sensing pain and pleasure if they did not have a persistent effect on behavior. That can be achieved by simply adding the subjective sense result to the proper parameter. So now the variable action parameter table for situation [1, 1] will now be
 
-These values should be tuned for the best results, but these simple formulas should be enough for our example.
+               0.5 0.545 0.5
+     rP()       |    |    |
+                |    |    |
+          -----------------------
+          1.0  2.0  3.0  4.0  5.0
+          Action B Parameter [1, 1]
 
-So let's say our critter
+Because the subjective senses for action B parameter 3.0 were favorable (greater than 0.0), it is now slightly more likely to choose that parameter again in the future. (Up from 33.3% to 35.3%.)
 
 1. Turing, A.M. (1950). Computing machinery and intelligence. Mind, 59, 433-460.

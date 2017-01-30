@@ -97,7 +97,7 @@ input[type="number"] {
 <thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
 
 <tbody>
-<tr class="matched"><th>0, 0</th><td>X</td>
+<tr class="matched"><th>0, 0</th><td>A</td>
 <tr><th>0, 1</th><td>A</td>
 <tr><th>1, 0</th><td>B</td>
 <tr><th>1, 1</th><td>B</td>
@@ -106,15 +106,6 @@ input[type="number"] {
 </article>
 
 <script>
-
-/*
-Oh god, does everything I do create more questions than it answers?
-
-Let's start with 25% chance for each situation: 00, 01, 10, 11
-Move A will change into a 10 or 11 (50%)
-Move B params over minimum will increase the likelihood of a 11 turning into a 01
-Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automatically
-*/
 
 /*
 "current state": situation, previous situation, action, action parameters,
@@ -142,8 +133,7 @@ Move #3: Wait. Costs a small amount of energy to get a new turn. Happens automat
 
 TODO:
 
-    add vss to current ss array
-    * variable action parameters should be based on action AND situation
+    variable parameters
     vss should be from a table with HTML render
     behavior table should be a data table with HTML render
 */
@@ -152,34 +142,43 @@ var elSsLog = document.getElementById("ssLog"),
     turn_count = 1,
     actions = {},
     vap = {},
-    tune = {"A": 1.0, "B": 10},
     current = {
         result: [0, 0],
         situation: [0, 0],
-        action: "X",
+        action: "A",
         action_parameter: 0.0,
         subjective_senses: [],
         consequences: [1.0, 1.0]
     };
 
 // Actions
-actions.X = function () {
+// Combine X and A where A:0.0 == X and consequence is only if S[1] = 1
+/*actions.X = function () {
     current.subjective_senses.push(-0.001);
-}
+}*/
 
 actions.A = function () {
     current.subjective_senses.push(-0.001);
-    current.subjective_senses.push(current.action_parameter / 200.0 * -1);
-    current.consequences[0] = 5.0;
+    current.subjective_senses.push(current.action_parameter / 500.0 * -1);
+
+    if (current.result[1] && current.action_parameter >= 1.0) {
+        current.consequences[0] = 5.0 * current.action_parameter;
+    }
+    console.log(current.subjective_senses);
+    console.log(current.consequences);
 }
 
 actions.B = function () {
+    var rnd = Math.random();
     current.subjective_senses.push(current.action_parameter / 100.0 * -1);
 
     if (current.result[0]) {
-        current.subjective_senses.push((current.action_parameter >= 3.0) ? 0.045 : 0.0);
+        current.subjective_senses.push((current.action_parameter >= 3.0) ? 0.05 : 0.0);
+        /*if (current.action_parameter * rnd * 5 >= 0.5) {
+            current.subjective_senses.push(0.045);
+        }*/
 
-        if (current.result[1] && current.action_parameter > 3.5) {
+        if (current.result[1] && current.action_parameter > 2.0) {
             current.consequences[0] = 10.0;
         }
     }
@@ -187,6 +186,10 @@ actions.B = function () {
 
 // variable action parameters
 vap.A = {};
+vap.A["0, 0"] = [
+    {"val": 0.0, "p": 0.5},
+    {"val": 1.0, "p": 0.5}
+];
 vap.A["0, 1"] = [
     {"val": 0.0, "p": 0.5},
     {"val": 1.0, "p": 0.5}
@@ -373,7 +376,7 @@ function behaviorTable() {
     var textMatch = current.result.join(", ");
 
     // reset current action state
-    current.action = "X";
+    current.action = "A";
 
     // find behavior - this should be done in a data structure and not an HTML table
     [].forEach.call(document.querySelectorAll("#behaviors th"), function(el) {
@@ -429,9 +432,7 @@ function aggregateCurrentSs() {
 }
 
 function subjectiveSenses() {
-    var ssAggregate = aggregateCurrentSs(),/*current.subjective_senses.reduce(function (a, b) {
-            return a + b;
-        }, 0.0),*/
+    var ssAggregate = aggregateCurrentSs(),
         varParam,
         v;
 
@@ -439,7 +440,7 @@ function subjectiveSenses() {
         // tune the variable
         varParam = vap[current.action][current.situation.join(", ")];
         v = getVar(varParam, current.action_parameter);
-        v.p = parseFloat(v.p) + ssAggregate * tune[current.action];
+        v.p = parseFloat(v.p) + ssAggregate;
         if (v.p < 0.0) {
             v.p = 0.0;
         }
@@ -447,8 +448,6 @@ function subjectiveSenses() {
     }
 
     displayVap(current.action, current.situation.join(", "));
-    console.log(current.subjective_senses.join(", "));
-    console.log("ss: " + ssAggregate.toPrecision(2));
     vss(ssAggregate);
 
     // Clear persistent subjective senses
@@ -460,7 +459,7 @@ function currentVss() {
     for (ii = 0; ii < len; ii += 1) {
         vssSit = vssRows[ii].getElementsByTagName("th")[0].textContent;
         vssVal = vssRows[ii].getElementsByTagName("td")[0].textContent;
-        console.log(current.result.join(", "), vssSit, vssVal);
+
         if (current.result.join(", ") === vssSit) {
             return parseFloat(vssVal) / 100;
         }
