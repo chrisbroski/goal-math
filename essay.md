@@ -6,7 +6,7 @@
 
 ### Abstract
 
-There are three main ways for a constructed device to manifest desire. All constructed objects have their creator's goals implied in their physical design and behavior but they aren't necessarily able to feel those instinctual desires themselves. For a machine to have emotional desire, it requires specialized sensors that evaluate situations that increase or decrease the probability of furthering their primary goal. Data from these subjective sensors can be used to fine-tune behaviors and create new subjective sensors by associating objective situations to subjective sensations. To exhibit conscious desire, data must exist to predict resulting situations from the combination of an action and the current situation.
+There are three main ways for a constructed device to manifest desire. All constructed objects have their creator's goals implied in their physical design and behavior but they aren't necessarily able to feel those *instinctual desires* themselves. For a machine to have *emotional desire*, it requires specialized sensors that evaluate situations that increase or decrease the probability of furthering their primary goal. Data from these subjective sensors can be used to fine-tune behaviors and create new subjective sensors by associating objective situations to subjective sensations. To exhibit *conscious desire*, data must exist to predict resulting situations from the combination of an action and the current situation, and should be integral to the process of assessing consequences before an action is chosen.
 
 1. What is a goal?
 2. Externally designed
@@ -82,9 +82,9 @@ An aggregate of all subjective sensory data is the measurement of whether the cr
     A: -0.001 - parameter * 0.002
     B: parameter * -0.01 + (if parameter >= 3.0: 0.05)
 
-The numeric parameter is retrieved from a separate variable parameters table for each situation. For example, for the "1, 1" situation, action B will be executed with a parameter from table 2. If the variable parameter is 3.0 (a 1 in 3 initial chance) then the resulting subjective sense value will be (from table 3) -0.01 + 0.05 or 0.045.
+The numeric parameter is retrieved from a separate variable parameters table for each situation. For example, for the `1, 1` situation, action B will be executed with a parameter from table 2. If the variable parameter is `3.0` (a 1 in 3 initial chance) then the resulting subjective sense value will be (from table 3) `-0.01 + 0.05` or `0.045`.
 
-#### Variable Parameter Tuning
+#### Variable Action Parameter Tuning
 
 There would be no point to sensing pain and pleasure if they did not have a persistent effect on behavior. That can be achieved by simply adding the subjective sense result to the proper parameter. So now the variable action parameter table for situation [1, 1] will now be
 
@@ -96,5 +96,9 @@ There would be no point to sensing pain and pleasure if they did not have a pers
           Action B Parameter [1, 1]
 
 Because the subjective senses for action B parameter 3.0 were favorable (greater than 0.0), it is now slightly more likely to choose that parameter again in the future. (Up from 33.3% to 35.3%.)
+
+#### Virtual Subjective Senses
+
+The aforementioned mathematics now allows a creature to adjust their behavior according to indicators of harm or benefit from existing subjective senses. 
 
 1. Turing, A.M. (1950). Computing machinery and intelligence. Mind, 59, 433-460.
