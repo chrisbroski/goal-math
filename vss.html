@@ -94,13 +94,13 @@ input[type="number"] {
 <h2>Behavior Table</h2>
 
 <table id="behaviors" class="data">
-<thead><tr><td>Situation<br>(Sensor 1, 2)<td>Action, Parameter
+<thead><tr><td>Situation<br>(Sensor A, B)<td>Action, Parameter
 
 <tbody>
-<tr class="matched"><th>0, 0</th><td>A</td>
-<tr><th>0, 1</th><td>A</td>
-<tr><th>1, 0</th><td>B</td>
-<tr><th>1, 1</th><td>B</td>
+<tr class="matched"><th>0, 0</th><td>X</td>
+<tr><th>0, 1</th><td>X</td>
+<tr><th>1, 0</th><td>Y</td>
+<tr><th>1, 1</th><td>Y</td>
 </table>
 
 </article>
@@ -145,7 +145,7 @@ var elSsLog = document.getElementById("ssLog"),
     current = {
         result: [0, 0],
         situation: [0, 0],
-        action: "A",
+        action: "X",
         action_parameter: 0.0,
         subjective_senses: [],
         consequences: [1.0, 1.0]
@@ -157,7 +157,7 @@ var elSsLog = document.getElementById("ssLog"),
     current.subjective_senses.push(-0.001);
 }*/
 
-actions.A = function () {
+actions.X = function () {
     current.subjective_senses.push(-0.001);
     current.subjective_senses.push(current.action_parameter / 500.0 * -1);
 
@@ -168,7 +168,7 @@ actions.A = function () {
     console.log(current.consequences);
 }
 
-actions.B = function () {
+actions.Y = function () {
     var rnd = Math.random();
     current.subjective_senses.push(current.action_parameter / 100.0 * -1);
 
@@ -185,29 +185,29 @@ actions.B = function () {
 }
 
 // variable action parameters
-vap.A = {};
-vap.A["0, 0"] = [
-    {"val": 0.0, "p": 0.5},
-    {"val": 1.0, "p": 0.5}
+vap.X = {};
+vap.X["0, 0"] = [
+    {"val": 0.0, "p": 1.0},
+    {"val": 1.0, "p": 1.0}
 ];
-vap.A["0, 1"] = [
-    {"val": 0.0, "p": 0.5},
-    {"val": 1.0, "p": 0.5}
+vap.X["0, 1"] = [
+    {"val": 0.0, "p": 1.0},
+    {"val": 1.0, "p": 1.0}
 ];
 
-vap.B = {};
-vap.B["1, 0"] = [
+vap.Y = {};
+vap.Y["1, 0"] = [
     {"val": 1.0, "p": 0.0},
-    {"val": 2.0, "p": 0.5},
-    {"val": 3.0, "p": 0.5},
-    {"val": 4.0, "p": 0.5},
+    {"val": 2.0, "p": 1.0},
+    {"val": 3.0, "p": 1.0},
+    {"val": 4.0, "p": 1.0},
     {"val": 5.0, "p": 0.0}
 ];
-vap.B["1, 1"] = [
+vap.Y["1, 1"] = [
     {"val": 1.0, "p": 0.0},
-    {"val": 2.0, "p": 0.5},
-    {"val": 3.0, "p": 0.5},
-    {"val": 4.0, "p": 0.5},
+    {"val": 2.0, "p": 1.0},
+    {"val": 3.0, "p": 1.0},
+    {"val": 4.0, "p": 1.0},
     {"val": 5.0, "p": 0.0}
 ];
 
