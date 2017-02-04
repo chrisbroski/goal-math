@@ -8,6 +8,16 @@
 
 There are three main ways for a constructed device to manifest desire. All constructed objects have their creator's goals implied in their physical design and behavior but they aren't necessarily able to feel those *instinctual desires* themselves. For a machine to have *emotional desire*, it requires specialized sensors that evaluate situations that increase or decrease the probability of furthering their primary goal. Data from these subjective sensors can be used to fine-tune behaviors and create new subjective sensors by associating objective situations to subjective sensations. To exhibit *conscious desire*, data must exist to predict resulting situations from the combination of an action and the current situation, and should be integral to the process of assessing consequences before an action is chosen.
 
+### Mathematical Notation
+
+Though this article is expressly about reducing broad concepts of intelligent behavior to mathematical models, I have chosen to not use formal mathematical notation. Formal math above a certain complexity is not executable by machine in a standard way nor is it easily understood by non-mathematicians. (It is also not easy to type on a standard keyboard.) I am going to use a computer programming language instead. I have chosen to use JavaScript (ES5 standard) for the following reasons:
+
+1. It is a very high-level language, so it does not rely on machine-specific instructions such as memory management.
+2. It is a commonly used language, especially by those whose primary expertise is not computer programming.
+3. It can be executed natively on any computer with a reasonably modern web browser.
+
+All code can be found at https://github.com/chrisbroski/goal-math
+
 1. What is a goal?
 2. Externally designed
 3. Tuning behavior with subjective senses
@@ -149,6 +159,18 @@ There were a lot of concepts introduced above. To try and make them clearer, her
 
 Creatures with emotional desire can alter their behavior toward indicators of benefit and harm. They can even have forward-looking behavior by altering behavior toward likely beneficial and away from likely harmful situations. They feel, but can't really think about their situation. What does a creature need to envision their goal? Surprisingly very little: predictive situation data and a process for its use. The only data required would be a simple table that records the resulting situation from an initial situation and and action. Creatures with emotional desire already parse this information when dealing with virtual subjective senses. All we have to do is add a step after \#7 to add the initial situation, performed action, and consequent situation to a table.
 
-This does add a major change to step \#1. 
+This does add a major change to step \#1. Instead of simply choosing an action, it must now go through a complex process with roughly these steps:
+
+1. Propose the action from the behavior table and the most probably variable parameter.
+2. Predict the consequent situation for current situation and proposed action in the beliefs table.
+3. Evaluate the predicted situation using VSS information.
+4. Decide whether to execute the proposed action and end the thinking process, or propose another action.
+5. Proposed a new possible action and go to step 2.
+
+I am not going to write a program to do this. Writing a conscious machine is JavaScript will probably take more time and research. Also, I would assume that the overly simple environment created for demonstrating instinctual and emotional desire (one that makes tic-tac-toe seem complicated) would not get much benefit from a highly intelligent thought process.
+
+### Conclusion
+
+The logic used to demonstrate the the more complex emotional desires is not meant to be definitive or exhaustive, but to be the simplest mechanism necessary to demonstration the viability of the particular effect. Factors will need to be tuned and the complexity will need to be expanded upon if these simple logical examples are to be applied to functioning intelligent artifacts.
 
 1. Turing, A.M. (1950). Computing machinery and intelligence. Mind, 59, 433-460.
