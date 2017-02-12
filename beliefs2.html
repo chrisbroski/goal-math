@@ -363,9 +363,6 @@ function think(sit) {
     beliefs.forEach(function (belief) {
         var ss, aAction = belief.action.split(":"), consequence;
 
-        //console.log(sit.join(", "));
-        //console.log(consequence.join(", "));
-
         if (belief.situation.join(", ") === sit.join(", ")) {
             consequence = belief.consequence.map(function (perc) {
                 return Math.round(perc);
@@ -373,10 +370,6 @@ function think(sit) {
             ss = actions[aAction[0]].cost(sit, parseFloat(aAction[1]));
             ss.push(getVss(consequence));
 
-            //console.log("sit: ", sit.join(", "));
-            console.log("consequence: ", consequence.join(", "));
-            console.log(ss);
-            console.log(aggregateSs(ss));
             if (aggregateSs(ss) > best_ss) {
                 best_action[0] = aAction[0];
                 best_action[1] = parseFloat(aAction[1]);
@@ -505,16 +498,29 @@ function understand() {
             "situation": current.situation,
             "action": current.action + ":" + current.action_parameter.toPrecision(3),
             "consequence": current.consequence,
-            "experience": 1
+            "experience": 1,
+            "consequence2": current.consequence.map(function (p) {
+                return {"x": p, "d": 0.0}
+            })
         });
     } else {
         // aggregate with previous belief
-        exp = beliefs[beliefId].experience
+        exp = beliefs[beliefId].experience;
         beliefs[beliefId].consequence = beliefs[beliefId].consequence.map(function (perception, index) {
             var fltPerception = parseFloat(perception),
                 fltCurrentPerception = parseFloat(current.consequence[index]);
 
-            return ((fltPerception * exp + fltCurrentPerception) / (exp + 1.0)).toFixed(3);
+            return (fltPerception + (fltCurrentPerception - fltPerception) / exp).toFixed(3);
+        });
+        beliefs[beliefId].consequence2 = beliefs[beliefId].consequence2.map(function (c, index) {
+            var meanPerception = parseFloat(c.x),
+                newPerception = parseFloat(current.consequence[index]),
+                varPerception = parseFloat(c.d),
+                mean = meanPerception + (newPerception - meanPerception) / parseFloat(exp),
+                diff = Math.abs(newPerception - mean);
+
+            //console.log(varPerception, delta, exp);
+            return {"x": mean.toFixed(3), "d": ((varPerception * parseFloat(exp) + diff) / parseFloat(exp)).toFixed(3)};
         });
         beliefs[beliefId].experience = exp + 1;
     }
