@@ -588,7 +588,7 @@ function changeDispVar() {
     displayBap(actionSit[0], actionSit[1]);
 }
 
-function buildVpSelect() {
+function buildBpSelect() {
     var a, b, opt, optgroup, sel = document.getElementById("selectBap");
     opt = document.createElement("option");
     opt.textContent = "Select BAP";
@@ -615,7 +615,7 @@ function buildVpSelect() {
 }
 
 function init() {
-    buildVpSelect()
+    buildBpSelect()
     turn();
 }
 

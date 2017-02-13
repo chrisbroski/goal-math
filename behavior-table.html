@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<title>Behavior Table - Goal Mathematics</title>
+<link rel="stylesheet" href="simple.css">
+<style type="text/css">
+h2 {
+    font-size: 24px;
+    font-weight: normal;
+}
+
+.data thead td {
+    padding: 8px;
+    font-weight: bold;
+}
+.data td, .data th {
+    text-align: center;
+    font-weight: normal;
+    border: 1px solid #ccc;
+}
+.data tr.matched td, .data tr.matched th {
+    background: #eee;
+}
+input[type="number"] {
+    text-align: right;
+    width: 4em;
+}
+</style>
+
+<body>
+
+<article>
+<h1>Behavior Table</h1>
+
+<p><button onclick="turn()">Random Situation</button>
+<p>Sensor A: <span id="display-sensorA"></span>, Sensor B: <span id="display-sensorB"></span>
+<p>Action: <span id="display-action"></span>
+
+<h2>Behavior Table</h2>
+
+<table id="behaviors" class="data">
+<thead><tr><td>Situation<br>(Sensor A, B)<td>Action: Parameter
+<tbody>
+</table>
+
+</article>
+
+<script>
+
+var current = {
+        situation: [0, 0]
+    },
+    behaviors = [
+        {"situation": "0, 0", "action": "X: 0.0"},
+        {"situation": "0, 1", "action": "X: 1.0"},
+        {"situation": "1, 0", "action": "Y: 3.0"},
+        {"situation": "1, 1", "action": "Y: 4.0"},
+    ];
+
+function clearTable(t) {
+    while (t.rows.length > 0) {
+        t.deleteRow(0);
+    }
+}
+
+function displayBehaviorTable(matched) {
+    var tbody = document.querySelector("#behaviors tbody"),
+        row,
+        th,
+        td;
+
+    behaviors.forEach(function (b, index) {
+        row = document.createElement("tr");
+        th = document.createElement("th");
+        td = document.createElement("td");
+
+        if (index === matched) {
+            row.className = "matched";
+        }
+        th.textContent = b.situation;
+        td.textContent = b.action;
+
+        row.appendChild(th);
+        row.appendChild(td);
+        tbody.appendChild(row);
+    });
+}
+
+function behaviorTable() {
+    var textMatch = current.situation.join(", "),
+        behavior;
+
+    behaviors.forEach(function (b, index) {
+        if (b.situation === textMatch) {
+            behavior = index;
+        }
+    });
+
+    document.querySelector("#display-action").textContent = behaviors[behavior].action;
+    clearTable(document.querySelector("#behaviors tbody"));
+    displayBehaviorTable(behavior);
+}
+
+function generateSituation() {
+    var sensorA = Math.round(Math.random()),
+        sensorB = Math.round(Math.random());
+
+    current.situation = [sensorA, sensorB];
+    document.getElementById("display-sensorA").textContent = current.situation[0];
+    document.getElementById("display-sensorB").textContent = current.situation[1];
+}
+
+function turn() {
+    generateSituation();
+    behaviorTable();
+}
+
+window.onload = turn;
+</script>

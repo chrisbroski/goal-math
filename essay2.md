@@ -156,9 +156,11 @@ Our array of blurry parameters has three items. In the event that one is removed
 > ...then shalt thou count to three, no more, no less. Three shall be the number thou shalt count, and the number of the counting shall be three.
 > - "Second Brother", Monty Python and the Quest for the Holy Grail
 
-When a blurry parameter is removed, another one must immediately be added in an adjacent spot. 
+To keep a constant number of blurry parameters, when one is removed, another one of equal precision can immediately be added to an adjacent spot that has not been tried. In our example, if parameter value 2.0 is removed, we can add one at 5.0. New parameters are created with a default likelihood of 0.50 because why not? We can use a different value for initial likelihood if experience teaches us, but for now 0.50 seems like a good starting point.
 
-Our creature can use feelings of punishment and reward to guide its behavior toward optimal values. This is a simple desire that doesn't yet have the wisdom to evaluate behavior past the immediate situation.
+What if, after more experience, the 5.0 parameter drops below the likelihood threshold and is removed? There are no adjacent parameter values that have not been already tried and determined to not be optimal. We instead can split the remaining two parameters into three, increasing the precision of all parameters.
+
+Our creature now has a decent system to use feelings to guide its behavior toward optimal values. It still doesn't have the wisdom to evaluate behaviors past ones that affect the immediate situation.
 
 #### Subjective Sense Aggregation
 
