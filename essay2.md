@@ -24,11 +24,13 @@ Though all constructed objects display instinctual desire inherent in the constr
 
 ### Mathematical Notation
 
-Though this article is expressly about reducing broad concepts of intelligent behavior to mathematical models, I have chosen to not use formal mathematical notation. Formal math above a certain complexity is not executable by machine in a standard way nor is it easily understood by non-mathematicians. (It is also not easy to type on a keyboard.) I am going to use a computer programming language instead. I have chosen to use JavaScript (ES5 standard) for the following reasons:
+Though this essay is about specifying broad concepts of intelligent behavior as mathematical models, I have chosen to not use formal mathematical notation. Formal math is not executable by machine in a standardized way, nor is it easily comprehended by non-mathematicians. (It is also not easy to type on a keyboard.) I am going to use a computer programming language instead. I have chosen to use JavaScript (ES5 standard) for the following reasons:
 
-1. It is a very high-level language, so it does not require machine-specific instructions such as memory management.
+1. It is a very high-level language, so it does not require machine-specific instructions like memory management.
 2. It is a commonly used language, especially by those whose primary expertise is not computer programming.
-3. It can be executed natively on any computer with a reasonably modern web browser.
+3. It can be executed natively on any computer with a current web browser.
+
+Because of "duck-typing" numeric values in JavaScript, floating-point data will be indicated by the inclusion of a decimal point. Numbers without a decimal point should be considered to be integers. To keep numbers small and easy to read, significant figures are not meant to indicate precision.
 
 All code examples can be found at https://github.com/chrisbroski/goal-math
 
@@ -75,7 +77,7 @@ As discussed previously, A and B are objective senses. Their purpose is to measu
 
 I define an action to be **beneficial** if it improves the odds of achieving a specified goal, and **harmful** if it decreases those odds. For example, subjective senses should return positive values when resources necessary to accomplish the goal are acquired, and negative if the creature experiences damage to vital parts of itself. Subjective sensory data can be literally thought of as feelings of pleasure and pain.
 
-A subjective sense should return an **intensity** value between 1.0 to -1.0.
+A subjective sense should return an **intensity** value between `1.0` to `-1.0`.
 
 * **1.0** is the best possible outcome. It should indicate that the creature's primary goal has been achieved and if it never accomplishes anything else, it can die happy.
 * **0.0** represents no affect on the changes of eventually accomplishing the primary goal.
@@ -83,8 +85,8 @@ A subjective sense should return an **intensity** value between 1.0 to -1.0.
 
 Let's give our creature's two actions a subjective sensory response.
 
-    subjective_sense_action_X = -0.001 - param * 0.002
-    subjective_sense_action_Y = parameter * -0.010 + (param >= 3.0) ? 0.050 : 0.0
+    subjective_sense_action_X = -0.00100 - param * 0.00200
+    subjective_sense_action_Y = parameter * -0.0100 + (param >= 3.0) ? 0.0500 : 0.0
 
 Action X only returns negative subjective sense values. Sticking with our metaphor of X being movement, moving costs time and energy and has no immediate benefit. Our creature can't feel the simple joy of taking a walk, yet.
 
@@ -94,7 +96,7 @@ Action Y is harmful by the parameter value multiplied by -0.01, but when the par
 
 If we don't allow a creature to experiment outside of pre-programmed behaviors, it can't possibly ever discover better ones. Instead of deterministically performing action Y with a parameter of 3.0, we could select one of three parameter values: 2.0, 3.0, or 4.0. A simple **blurry action parameter** consists of a number of parameter values, each with a likelihood of 0.0 to 1.0. Let's represent a collection of blurry parameters for action Y in situation `0, 1` with this data structure.
 
-    bap.Y["0, 1"] = [
+    bap.Y["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0},
@@ -110,31 +112,27 @@ So our critter can now haphazardly choose one of three parameters, but making a 
 
 #### Blurry Parameter Tuning
 
-There would be no point to sensing pain and pleasure if it did not result in a persistent improvement in behavior. This can be achieved by simply adding the subjective sense result to the likelihood of the appropriate blurry parameter. If our creature is in situation `[1, 1]` and performs action Y with a parameter of 3.0, it will result in a subjective sense of `0.020`. This will affect the blurry parameter table for *Action Y/Situation [1, 1]*.
+There would be no point to sensing pain and pleasure if it did not result in a persistent improvement in behavior. This can be achieved by simply adding the subjective sense result to the likelihood of the appropriate blurry parameter. If our creature is in situation `[1, 0]` and performs action Y with a parameter of 3.0, it will result in a subjective sense of `0.02`. This will affect the blurry parameter table for *Action Y/Situation [1, 1]*.
 
-               1.0 1.045 1.0
-    Likelihood  |    |    |
-                |    |    |
-          -----------------------
-          1.0  2.0  3.0  4.0  5.0
-    Blurry Parameters: Action Y/Situation [1, 1]  
-      Table 3 Tuning Blurry Parameters
+    bap.Y["1, 0"] = [
+        {"param": 2.0, "likelihood": 1.0},
+        {"param": 3.0, "likelihood": 1.02},
+        {"param": 4.0, "likelihood": 1.0},
+    ];
 
-Because the subjective senses for action Y parameter 3.0 were favorable (greater than 0.0), it is slightly more likely to be chosen next time. (Up from 33.3% to 34.3%.)
+Because the subjective senses for action Y parameter 3.0 were favorable (greater than 0.0), it is slightly more likely to be chosen next time. (Up from 33.3% to 33.8%.)
 
 #### Blurry Parameter Normalization
 
 To keep the amount of change from subjective senses consistent, blurry parameter likelihoods should be adjusted so the maximum has a value of 1.0.
 
-                0.96 1.0  0.96
-     Likelihood  |    |    |
-                 |    |    |
-               ---------------
-                2.0  3.0  4.0
-    Blurry Parameters: Action Y/Situation [1, 1]
-     Table 4: Normalized Blurry Parameters
+    bap.Y["1, 0"] = [
+        {"param": 2.0, "likelihood": 0.98},
+        {"param": 3.0, "likelihood": 1.0},
+        {"param": 4.0, "likelihood": 0.98},
+    ];
 
-It is possible that through the effects of tuning and normalization some parameter values may become highly unlikely. After normalization, we should also clean up insignificant likelihoods by removing parameters beneath some specified threshold.
+It is possible that through the effects of tuning and normalization some parameter values may become highly unlikely. After normalization, we should also clean up insignificant likelihoods by removing parameters beneath a specified threshold.
 
 #### Adding and Splitting Blurry Parameters
 
