@@ -5,60 +5,7 @@
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 <title>Beliefs - Goal Mathematics</title>
 <link rel="stylesheet" href="simple.css">
-<style type="text/css">
-h2 {
-    font-size: 24px;
-    font-weight: normal;
-}
-
-#variableParams {
-    table-layout: fixed;
-    border-collapse: collapse;
-}
-#variableParams th, #variableParams td {
-    text-align: center;
-    border: 2px solid #fff;
-    width: 60px;
-}
-#variableParams tfoot td {
-    font-weight: bold;
-}
-#variableParams tbody td {
-    height: 160px;
-    background: #fafafa;
-}
-#variableParams td.current-param {
-    font-weight: bold;
-}
-
-.data thead td {
-    padding: 8px;
-    font-weight: bold;
-}
-.data td, .data th {
-    text-align: center;
-    font-weight: normal;
-    border: 1px solid #ccc;
-}
-.data tr.matched td, .data tr.matched th {
-    background: #eee;
-}
-input[type="number"] {
-    text-align: right;
-    width: 4em;
-}
-#ssLog {
-    padding: 4px;
-    background: #333;
-    color: #fff;
-    width: 360px; height: 180px;
-    overflow: auto;
-}
-#vss tbody td {
-    padding-right: 1em;
-    text-align: right;
-}
-</style>
+<link rel="stylesheet" href="goal.css">
 
 <body>
 
@@ -581,7 +528,7 @@ function turn(amount) {
     }
 }
 
-function changeDispVar() {
+function changeDispBap() {
     var sel = document.getElementById("selectBap"),
         actionSit = sel.value.split(":");
 
@@ -611,7 +558,7 @@ function buildBpSelect() {
             sel.appendChild(optgroup);
         }
     }
-    sel.onchange = changeDispVar;
+    sel.onchange = changeDispBap;
 }
 
 function init() {

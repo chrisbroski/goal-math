@@ -20,7 +20,7 @@
 
 ### Abstract
 
-Though all constructed objects display instinctual desire inherent in the construction of their physical design and behavior, they don't necessarily share the desire of their creator. For a machine to internalize the intent to accomplish a goal, it must have *emotional desire*. The simplest system of emotional desire has two requirements: 1) Random variation for exploration outside of initially programmed behavior, and 2) Subjective sensors that indicate if the consequences of actions are beneficial or harmful to the eventual success of the primary goal. This simple system can be given foresight by the addition of the ability to associate objective situation to previously experienced subjective senses. The basic mathematics of these processes are demonstrated in functioning computer code.
+Though all constructed objects display instinctual desire inherent in the construction of their physical design and behavior, they don't necessarily share the desire of their creator. For a machine to internalize the intent to accomplish a goal, it must have *emotional desire*. The simplest system of emotional desire has two requirements: 1) Random variation for space to explore outside of initially programmed behavior, and 2) Subjective sensors to indicate if the consequences of actions are beneficial or harmful to the eventual success of the primary goal. This simple system can be given foresight by the addition of the ability to associate objective situation to previously experienced subjective senses. The basic mathematics of these processes are demonstrated in functioning computer code.
 
 ### Mathematical Notation
 
@@ -42,7 +42,7 @@ All well-designed creations have a purpose that can be discernible from their mo
 
 ### Habitat for Intelligent Behavior
 
-My upcoming examples will exist in a small, turn-based environment. Our creature will have two objectives senses: A and B. Each sense will always read one of the two boolean values: 0 or 1. The creature also has two possible actions: X and Y. Each of these actions also requires a single numeric parameter to indicate the magnitude of the action. This is the simplest environment that I have found that is complex enough to demonstrate complex behavior.
+To illustrate these ideas, I am going to be designing a creature that exists a tiny, turn-based environment. It is equipped with two objectives senses: A and B. Each sense will always read one of the two boolean values: 0 or 1. The creature also has two possible actions: X and Y that also take a numeric parameter indicating the magnitude of the action. This is the simplest environment that I have found that can demonstrate moderately complex behavior.
 
 The above description of my little universe is a little sterile, so to make the upcoming examples easier to imagine, we can relate the creature's senses and actions to familiar things in our own world. Let's pretend that our creature needs to eat food to obtain the energy needed to power its senses and actions. In this scenario, we can think of action Y as eating, and action X as movement. Sense A reads `1` when food is within eating distance and B is `1` when food is within movement distance. The environment is not tied to this meaning, but it can help to think of it in this familiar way to help understand the concepts.
 
@@ -50,56 +50,25 @@ The above description of my little universe is a little sterile, so to make the 
 
 If the core of intelligence is choosing an action, let's start with a simple data structure and process to do so. We can use a table with rows of behaviors, each consisting of a single **situation** (coinciding sensory information) and an action.
 
-<table>
-<thead><tr><td>Situation (A, B)<td>Action, Parameter
-<tbody>
-<tr><td>0, 0<td>X, 0.0
-<tr><td>0, 1<td>X, 1.0
-<tr><td>1, 0<td>Y, 3.0
-<tr><td>1, 1<td>Y, 4.0
-</table>
-Table 1. Behavior Table
+    behaviors = [
+        {"situation": "0, 0", "action": "X: 0.0"},
+        {"situation": "0, 1", "action": "X: 1.0"},
+        {"situation": "1, 0", "action": "Y: 3.0"},
+        {"situation": "1, 1", "action": "Y: 4.0"},
+    ];
 
 The process to utilize simple behavior tables is:
 
-1. Examine the current sensor values.
-2. Find the row that matches the current sensory information in the situation column.
-3. Perform the action from the matched row.
+1. Take a snapshot of sensor values at the current point in time.
+2. Find the behavior that matches the current sensory information in the situation column.
+3. Perform the action from the matched behavior.
 4. Repeat
 
-A creature can use this system to execute custom behaviors. Though if the creature can't modify its own behavior table, does it really feel desire, or it is simply executing mindless instructions? I argue that even though a choosing process exists, and therefore qualifies as intelligent, if those choices can never be changed, they are merely instincts. **Instinctual desire** for a goal does not truly reside in the creature, but in its creator. How can we create a process for our creations to accept our goal as their own personal desire?
-
-### Blurry Action Parameters
-
-If we don't allow a creature to experiment outside of pre-programmed behaviors, it can't possibly ever discover better ones. Instead of deterministically performing action Y with an action parameter of 3.0, we could select one of three parameter values: 2.0, 3.0, or 4.0.
-
-               1.0  1.0  1.0
-    Likelihood  |    |    |
-                |    |    |
-          -----------------------
-          1.0  2.0  3.0  4.0  5.0
-         Action Y Blurry Parameters
-     Table 2. Blurry Action Parameters
-
-A simple **blurry action parameter** data structure consists of a number of parameter values, each with a likelihood of 0.0 to 1.0. A JSON data structure of the above table could be:
-
-    bap_action_Y = [
-        {"param": 2.0, "likelihood": 1.0},
-        {"param": 3.0, "likelihood": 1.0},
-        {"param": 4.0, "likelihood": 1.0},
-    ];
-
-We can calculate the absolute probability of a parameter by dividing its likelihood by the sum of all likelihoods.
-
-    bap_action_Y[0].likelihood / bap_action_Y.reduce(function (aggregator, bap) {
-        return aggregator + bap.likelihood;
-    }, 0.0); // ~33%
-
-So our critter can now haphazardly choose one of three parameters, but making a random choice is not the same as making an choice with the aim to accomplish a goal. To fix that, we will need to give our creation a way to compare the benefit or harm between different action parameters, then adjust likelihoods based on those results.
+A creature can use this system to execute custom behaviors. But if the creature can't modify its own behavior table, does it really feel desire, or it is simply executing mindless instructions? I argue that even though a choosing process exists, and therefore qualifies as intelligent, if those choices can never be changed, they are merely instincts. **Instinctual desire** for a goal does not truly reside in the creature, but in its creator. How can we create a process for our creations to accept our goal as their own personal desire?
 
 ### The Mathematics of Pleasure and Pain
 
-As discussed previously, A and B are objective senses. Their purpose is to measure properties of the environment accurately, consistently, and in a timely fashion. These senses objectively report the facts and don't make assessments about whether that information is good or bad. But to evaluate the benefit or harm caused by a behavior, that is the opposite of what we need. Instead of objective senses, we need **subjective senses** that don't care about the details of the environment, only whether what just happened was good or bad. But what is *good* and *bad* in a mathematical sense?
+As discussed previously, A and B are objective senses. Their purpose is to measure properties of the environment accurately, consistently, and quickly. These senses objectively report facts and don't bother making assessments about if that information is good or bad. But to evaluate the benefit or harm caused by a behavior, it is the opposite of what we need. Instead of objective senses, we need **subjective senses** that don't care about the details of the environment, only whether what just happened was good or bad. But what is *good* and *bad* in a mathematical sense?
 
 > I'm fuzzy on the whole "good/bad" thing.
 > -- Dr. Peter Venkman
@@ -109,17 +78,35 @@ I define an action to be **beneficial** if it improves the odds of achieving a s
 A subjective sense should return an **intensity** value between 1.0 to -1.0.
 
 * **1.0** is the best possible outcome. It should indicate that the creature's primary goal has been achieved and if it never accomplishes anything else, it can die happy.
-* **0.0** indicates no change in odds of eventually accomplishing its primary goal.
-* **-1.0** is the worst thing that could possibly happen: death and dismemberment, all previous accomplishments destroyed and other horrible disasters.
+* **0.0** represents no affect on the changes of eventually accomplishing the primary goal.
+* **-1.0** is the worst thing that could possibly happen: death and dismemberment, all previous accomplishments destroyed and other terrible disasters.
 
-Let's give our creature's two actions an inherent subjective sensory response.
+Let's give our creature's two actions a subjective sensory response.
 
     subjective_sense_action_X = -0.001 - param * 0.002
     subjective_sense_action_Y = parameter * -0.010 + (param >= 3.0) ? 0.050 : 0.0
 
-Action X only returns negative subjective sense values. Sticking with our metaphor of X being movement, moving costs time and energy and has no immediate benefit. Our creature can't feel the simple joy of walking, yet.
+Action X only returns negative subjective sense values. Sticking with our metaphor of X being movement, moving costs time and energy and has no immediate benefit. Our creature can't feel the simple joy of taking a walk, yet.
 
-Action Y is harmful by the parameter value multiplied by -0.01, but when the parameter is greater than or equal to 3.0, it gains 0.050. In out eating metaphor this would relate to a successful ingestion of food.
+Action Y is harmful by the parameter value multiplied by -0.01, but when the parameter is greater than or equal to 3.0, it gains 0.050. This is consistent with our eating metaphor. It takes a little time and energy to do, but if successful, can result in acquiring energy and other critical resources.
+
+### Blurry Action Parameters
+
+If we don't allow a creature to experiment outside of pre-programmed behaviors, it can't possibly ever discover better ones. Instead of deterministically performing action Y with a parameter of 3.0, we could select one of three parameter values: 2.0, 3.0, or 4.0. A simple **blurry action parameter** consists of a number of parameter values, each with a likelihood of 0.0 to 1.0. Let's represent a collection of blurry parameters for action Y in situation `0, 1` with this data structure.
+
+    bap.Y["0, 1"] = [
+        {"param": 2.0, "likelihood": 1.0},
+        {"param": 3.0, "likelihood": 1.0},
+        {"param": 4.0, "likelihood": 1.0},
+    ];
+
+We can calculate the absolute probability of a parameter by dividing its likelihood by the sum of all likelihoods.
+
+    bap.Y["0, 1"][0].likelihood / bap.Y["0, 1"].reduce(function (aggregator, bap) {
+        return aggregator + bap.likelihood;
+    }, 0.0); // ~33%
+
+So our critter can now haphazardly choose one of three parameters, but making a random choice is not the same as making a choice with the aim of accomplishing a goal. To fix that, we will need to give our creature a way to compare the benefit or harm between different action parameters, then adjust likelihoods based on those results.
 
 #### Blurry Parameter Tuning
 
@@ -162,6 +149,18 @@ What if, after more experience, the 5.0 parameter drops below the likelihood thr
 
 Our creature now has a decent system to use feelings to guide its behavior toward optimal values. It still doesn't have the wisdom to evaluate behaviors past ones that affect the immediate situation.
 
+#### Virtual Subjective Senses
+
+A simple way to give our creature a little foresight would be do associate subjective situations with the subjective senses of past experience. If we keep track Our creature should be able to have positive feelings when experiencing situations with objective sensor A is true. It should not be as strong as the actual result of the eventual action, so it should be dampened a little.
+
+    Situation	VSS
+      0, 0	   0.0090
+      0, 1	   0.0101
+      1, 0	   0.0233
+      1, 1	   0.0337
+
+But how would this affect our creature's behavior? It would not, in its current state, so let's make action X do something a little more useful. We'll need to cause it to have an effect on it environment. We'll give action X the ability to increase the odds that the next situation will have a sensor A value of true if the current situation sensor B is true and action X parameter is >= 1.0. The subjective senses for performing action X will be the same, but if we wait to tune action parameters until we see what sort of situation results after the action is performed, we can tack on the virtual subjective sense as well.
+
 #### Subjective Sense Aggregation
 
 In the above example, feelings from multiple subjective senses are combined using addition. This works with one positive value and one negative value, but summing multiple values of the same sign could result in an intensity greater than 1.0 or less than -1.0, inconsistent with the definition of subjective sense intensities described above. Let's create an aggregation rule that prevents invalid results.
@@ -189,18 +188,6 @@ Each value should be added together, in order, weighed by the difference between
 The final value is simply the aggregate pleasure minus the aggregate pain.
 
     feelings = pleasure - pain
-
-#### Virtual Subjective Senses
-
-We can give our creature the ability to judge longer term repercussions of its actions by associating objective situations with the subjective senses experienced after the action is performed. For example, it is possible to get positive results from acting on situations when sensor A is true, but never when it is false. Our creature should be able to have positive feelings when experiencing situations with objective sensor A is true. It should not be as strong as the actual result of the eventual action, so it should be dampened a little.
-
-    Situation	VSS
-      0, 0	   0.0090
-      0, 1	   0.0101
-      1, 0	   0.0233
-      1, 1	   0.0337
-
-But how would this affect our creature's behavior? It would not, in its current state, so let's make action X do something a little more useful. We'll need to cause it to have an effect on it environment. We'll give action X the ability to increase the odds that the next situation will have a sensor A value of true if the current situation sensor B is true and action X parameter is >= 1.0. The subjective senses for performing action X will be the same, but if we wait to tune action parameters until we see what sort of situation results after the action is performed, we can tack on the virtual subjective sense as well.
 
 #### Process of Emotional Desire
 

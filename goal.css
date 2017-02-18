@@ -1,0 +1,56 @@
+h2 {
+    font-size: 24px;
+    font-weight: normal;
+}
+
+#variableParams {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+#variableParams th, #variableParams td {
+    text-align: center;
+    border: 2px solid #fff;
+    width: 60px;
+}
+#variableParams tfoot td {
+    font-weight: bold;
+}
+#variableParams tbody td {
+    height: 160px;
+    background: #fafafa;
+}
+#variableParams td.current-param {
+    font-weight: bold;
+}
+
+.data thead td {
+    padding: 8px;
+    font-weight: bold;
+}
+.data td, .data th {
+    text-align: center;
+    font-weight: normal;
+    border: 1px solid #ccc;
+}
+.data tr.matched td, .data tr.matched th {
+    background: #eee;
+}
+input[type="number"] {
+    text-align: right;
+    width: 4em;
+}
+#ssLog {
+    padding: 4px;
+    background: #333;
+    color: #fff;
+    width: 360px; height: 180px;
+    overflow: auto;
+}
+#vss tbody td {
+    padding-right: 1em;
+    text-align: right;
+}
+samp {
+    margin: 0 0.2em; padding: 0 0.2em;
+    border: 1px solid #ddd;
+}

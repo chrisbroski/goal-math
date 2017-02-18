@@ -5,29 +5,7 @@
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
 <title>Behavior Table - Goal Mathematics</title>
 <link rel="stylesheet" href="simple.css">
-<style type="text/css">
-h2 {
-    font-size: 24px;
-    font-weight: normal;
-}
-
-.data thead td {
-    padding: 8px;
-    font-weight: bold;
-}
-.data td, .data th {
-    text-align: center;
-    font-weight: normal;
-    border: 1px solid #ccc;
-}
-.data tr.matched td, .data tr.matched th {
-    background: #eee;
-}
-input[type="number"] {
-    text-align: right;
-    width: 4em;
-}
-</style>
+<link rel="stylesheet" href="goal.css">
 
 <body>
 
@@ -35,8 +13,8 @@ input[type="number"] {
 <h1>Behavior Table</h1>
 
 <p><button onclick="turn()">Random Situation</button>
-<p>Sensor A: <span id="display-sensorA"></span>, Sensor B: <span id="display-sensorB"></span>
-<p>Action: <span id="display-action"></span>
+<p>Sensor A: <samp id="display-sensorA"></samp>, Sensor B: <samp id="display-sensorB"></samp>
+<p>Action: <samp id="display-action"></samp>
 
 <h2>Behavior Table</h2>
 
@@ -88,8 +66,8 @@ function displayBehaviorTable(matched) {
     });
 }
 
-function behaviorTable() {
-    var textMatch = current.situation.join(", "),
+function behaviorTable(situation) {
+    var textMatch = situation.join(", "),
         behavior;
 
     behaviors.forEach(function (b, index) {
@@ -114,7 +92,7 @@ function generateSituation() {
 
 function turn() {
     generateSituation();
-    behaviorTable();
+    behaviorTable(current.situation);
 }
 
 window.onload = turn;
