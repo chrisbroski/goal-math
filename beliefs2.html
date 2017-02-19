@@ -39,12 +39,12 @@
 </table>
 
 <h2>
-    Variable Parameters for Action
+    Blurry Action Parameters
     <span id="vpAction"></span>,
     Situation: <span id="vpSituation"></span>
 </h2>
 <p><select id="selectBap"></select>
-<table id="variableParams"><thead></thead><tbody></tbody></table>
+<table id="blurry-action-parameters"><thead></thead><tbody></tbody></table>
 
 <h2>Behavior Table</h2>
 
@@ -254,11 +254,11 @@ function displayBap(action, situation) {
 
     document.getElementById("vpSituation").textContent = situation;
     document.getElementById("vpAction").textContent = action;
-    varTable = document.getElementById("variableParams");
+    varTable = document.getElementById("blurry-action-parameters");
     clearTable(varTable);
-    varThead = document.querySelector("#variableParams thead");
+    varThead = document.querySelector("#blurry-action-parameters thead");
     varTheadRow = varThead.insertRow();
-    varTbody = document.querySelector("#variableParams tbody");
+    varTbody = document.querySelector("#blurry-action-parameters tbody");
     varTbodyRow = varTbody.insertRow();
 
     if (!bap[action]) {

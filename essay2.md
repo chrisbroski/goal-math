@@ -149,7 +149,7 @@ Our creature now has a decent system to use feelings to guide its behavior towar
 
 #### Virtual Subjective Senses
 
-A simple way to give our creature a little foresight would be do associate subjective situations with the subjective senses of past experience. If we keep track Our creature should be able to have positive feelings when experiencing situations with objective sensor A is true. It should not be as strong as the actual result of the eventual action, so it should be dampened a little.
+A simple way to give our creature a little foresight would be to associate objective situations with the subjective senses associated from past experience. If we kept track of each situation's past feelings, our creature would be able to have positive feelings when experiencing situations with objective sensor A is true. It should not be as strong as the actual result of the eventual action, so it should be dampened a little.
 
     Situation	VSS
       0, 0	   0.0090

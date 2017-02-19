@@ -3,23 +3,23 @@ h2 {
     font-weight: normal;
 }
 
-#variableParams {
+#blurry-action-parameters {
     table-layout: fixed;
     border-collapse: collapse;
 }
-#variableParams th, #variableParams td {
+#blurry-action-parameters th, #blurry-action-parameters td {
     text-align: center;
     border: 2px solid #fff;
     width: 60px;
 }
-#variableParams tfoot td {
+#blurry-action-parameters tfoot td {
     font-weight: bold;
 }
-#variableParams tbody td {
+#blurry-action-parameters tbody td {
     height: 160px;
     background: #fafafa;
 }
-#variableParams td.current-param {
+#blurry-action-parameters td.current-param {
     font-weight: bold;
 }
 

@@ -6,8 +6,7 @@
     var current = {
             situation: [0, 0],
             action: "",
-            action_parameter: 0.0,
-            subjective_senses: []
+            action_parameter: 0.0
         },
         behaviors = [
             {"situation": "0, 0", "action": "X"},
@@ -134,7 +133,7 @@
         var subjectiveSense = actions[action](param, situation),
             displaySubjectiveSense = document.querySelector("#display-subjective-sense");
 
-        current.subjective_senses = subjectiveSense;
+        current.subjective_sense = subjectiveSense;
         displaySubjectiveSense.textContent = subjectiveSense.toPrecision(2);
     }
 
