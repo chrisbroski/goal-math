@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<title>Goal Mathematics - Tuning Variables</title>
+<link rel="stylesheet" href="simple.css">
+<style type="text/css">
+h2 {
+    font-size: 24px;
+    font-weight: normal;
+}
+
+#variableParams {
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+#variableParams th, #variableParams td {
+    text-align: center;
+    border: 2px solid #fff;
+    width: 60px;
+}
+#variableParams tfoot td {
+    font-weight: bold;
+}
+#variableParams tbody td {
+    height: 160px;
+    background: #fafafa;
+}
+#variableParams td.current-param {
+    font-weight: bold;
+}
+
+.data thead td {
+    padding: 8px;
+    font-weight: bold;
+}
+.data td, .data th {
+    text-align: center;
+    font-weight: normal;
+    border: 1px solid #ccc;
+}
+.data tr.matched td, .data tr.matched th {
+    background: #eee;
+}
+input[type="number"] {
+    text-align: right;
+    width: 4em;
+}
+#ssLog {
+    padding: 4px;
+    background: #333;
+    color: #fff;
+    width: 360px; height: 180px;
+    overflow: auto;
+}
+#vss tbody td {
+    padding-right: 1em;
+    text-align: right;
+}
+</style>
+
+<body>
+
+<article>
+<h1>Virtual Subjective Senses</h1>
+
+<p>
+    <button onclick="turn()">One Turn</button>
+    <button onclick="turn(99)">100 Turns</button>
+    Total Turn Count: <span id="turn-count"></span>
+<p>Current Situation: <span id="display-situation"></span>
+
+<h2>Opinions (Virtual Subjective Senses)</h2>
+
+<table id="vss" class="data">
+<thead><tr><td>Situation</td><td>VSS * 100</td></tr></thead>
+<tbody>
+    <tr><th>0, 0</th><td>0.0</td></tr>
+    <tr><th>0, 1</th><td>0.0</td></tr>
+    <tr><th>1, 0</th><td>0.0</td></tr>
+    <tr><th>1, 1</th><td>0.0</td></tr>
+</tbody>
+</table>
+
+<h2>
+    Variable Parameters for Action
+    <span id="vpAction"></span>,
+    Situation: <span id="vpSituation"></span>
+</h2>
+<p><select id="selectVap"></select>
+<table id="variableParams"><thead></thead><tbody></tbody></table>
+
+<h2>Behavior Table</h2>
+
+<table id="behaviors" class="data">
+<thead><tr><td>Situation<br>(Sensor A, B)<td>Action, Parameter
+
+<tbody>
+<tr class="matched"><th>0, 0</th><td>X</td>
+<tr><th>0, 1</th><td>X</td>
+<tr><th>1, 0</th><td>Y</td>
+<tr><th>1, 1</th><td>Y</td>
+</table>
+
+</article>
+
+<script>
+
+/*
+"current state": situation, previous situation, action, action parameters,
+    subjective senses, action effects
+"persistent table" data: behaviors, variable parameters, actions
+"logical flow": consistent order of actions that should work step-wise or time interval
+
+    1. generate situation
+        a. take into account effects from actions
+        b. set state: situation and previous_situation
+    2. Handle subjective sense data
+        a. Add VSS to currSS (in addition to previous actions ss)
+        b. Aggregate currSS
+        c. Tune action parameters
+        d. Calculate and update VSS for previous situation
+        e. Clear currSS
+    3. check behavior table
+    4. perform action
+        a. set state: current action
+        b. get proper variable parameters
+        c. set state: variable parameters
+        d. Add inherent action costs to currSS
+        e. set state: action effects
+        f. Add action effects to currSS
+
+TODO:
+
+    variable parameters
+    vss should be from a table with HTML render
+    behavior table should be a data table with HTML render
+*/
+
+var elSsLog = document.getElementById("ssLog"),
+    turn_count = 1,
+    actions = {},
+    vap = {},
+    current = {
+        result: [0, 0],
+        situation: [0, 0],
+        action: "X",
+        action_parameter: 0.0,
+        subjective_senses: [],
+        consequences: [1.0, 1.0]
+    };
+
+// Actions
+// Combine X and A where A:0.0 == X and consequence is only if S[1] = 1
+/*actions.X = function () {
+    current.subjective_senses.push(-0.001);
+}*/
+
+actions.X = function () {
+    current.subjective_senses.push(-0.001);
+    current.subjective_senses.push(current.action_parameter / 500.0 * -1);
+
+    if (current.result[1] && current.action_parameter >= 1.0) {
+        current.consequences[0] = 5.0 * current.action_parameter;
+    }
+    console.log(current.subjective_senses);
+    console.log(current.consequences);
+}
+
+actions.Y = function () {
+    var rnd = Math.random();
+    current.subjective_senses.push(current.action_parameter / 100.0 * -1);
+
+    if (current.result[0]) {
+        current.subjective_senses.push((current.action_parameter >= 3.0) ? 0.05 : 0.0);
+        /*if (current.action_parameter * rnd * 5 >= 0.5) {
+            current.subjective_senses.push(0.045);
+        }*/
+
+        if (current.result[1] && current.action_parameter > 2.0) {
+            current.consequences[0] = 10.0;
+        }
+    }
+}
+
+// variable action parameters
+vap.X = {};
+vap.X["0, 0"] = [
+    {"val": 0.0, "p": 1.0},
+    {"val": 1.0, "p": 1.0}
+];
+vap.X["0, 1"] = [
+    {"val": 0.0, "p": 1.0},
+    {"val": 1.0, "p": 1.0}
+];
+
+vap.Y = {};
+vap.Y["1, 0"] = [
+    {"val": 1.0, "p": 0.0},
+    {"val": 2.0, "p": 1.0},
+    {"val": 3.0, "p": 1.0},
+    {"val": 4.0, "p": 1.0},
+    {"val": 5.0, "p": 0.0}
+];
+vap.Y["1, 1"] = [
+    {"val": 1.0, "p": 0.0},
+    {"val": 2.0, "p": 1.0},
+    {"val": 3.0, "p": 1.0},
+    {"val": 4.0, "p": 1.0},
+    {"val": 5.0, "p": 0.0}
+];
+
+function getVar(vTable, val) {
+    var ii, len = vTable.length;
+    for (ii = 0; ii < len; ii += 1) {
+        if (vTable[ii].val === val) {
+            return vTable[ii];
+        }
+    }
+
+    return {};
+}
+
+function normalizeVap() {
+    // check if any params are over 1.0
+    var highest = 0.0, var_params = vap[current.action][current.situation.join(", ")];
+    var_params.forEach(function (p) {
+        if (p.p > highest) {
+            highest = p.p;
+        }
+    });
+
+    // if so, divide all by whatever is needed to normalize
+    if (highest > 1.0) {
+        vap[current.action][current.situation.join(", ")] = var_params.map(function (p) {
+            return {"val": p.val, "p": p.p / parseFloat(highest)};
+        });
+    }
+}
+
+function vss(ss) {
+    var situation = current.situation.join(", "),
+        vssRows = document.querySelectorAll("#vss tbody tr"),
+        ii,
+        len = vssRows.length,
+        existingVss,
+        newVss;
+
+    for (ii = 0; ii < len; ii += 1) {
+        if (vssRows[ii].getElementsByTagName("th")[0].textContent === situation) {
+            // This needs to be stored in a real data structure
+            existingVss = parseFloat(vssRows[ii].getElementsByTagName("td")[0].textContent) / 100;
+            newVss = (existingVss + ss) / 2;
+            vssRows[ii].getElementsByTagName("td")[0].textContent = (newVss * 100).toFixed(2);
+            return;
+        }
+    }
+}
+
+function getFirstOver(a, threshold) {
+    var ii, len = a.length;
+    for (ii = 0; ii < len; ii += 1) {
+        if (threshold < a[ii]) {
+            return ii;
+        }
+    }
+    return -1;
+}
+
+function getVariableParam() {
+    var totalVarParams,
+        lvls = [],
+        var_params;
+
+    if (!vap[current.action]) {
+        return 0.0;
+    }
+
+    var_params = vap[current.action][current.result.join(", ")];
+    totalVarParams = var_params.reduce(function (a, b) {
+        return a + b.p;
+    }, 0.0);
+
+    var_params.forEach(function (lvl, index) {
+        if (index === 0) {
+            lvls.push(lvl.p);
+        } else {
+            lvls.push(lvl.p + lvls[index - 1]);
+        }
+    });
+
+    lvls = lvls.map(function (val) {
+        return val / totalVarParams;
+    });
+
+    return var_params[getFirstOver(lvls, Math.random())].val;
+}
+
+function act() {
+    var action_msg;
+
+    // clear previous action effects
+    current.consequences[0] = 1.0;
+    current.consequences[1] = 1.0;
+
+    if (current.action_parameter) {
+        action_msg = current.action + ", " + current.action_parameter;
+    } else {
+        action_msg = current.action;
+    }
+    console.log("action: " + action_msg);
+
+    actions[current.action]();
+}
+
+function clearTable(t) {
+    while (t.rows.length > 0) {
+        t.deleteRow(0);
+    }
+}
+
+function displayVap(action, situation) {
+    var varTable, varThead, varTheadRow, varTbody, varTbodyRow, theadCell, tbodyCell;
+
+    document.getElementById("vpSituation").textContent = situation;
+    document.getElementById("vpAction").textContent = action;
+    varTable = document.getElementById("variableParams");
+    clearTable(varTable);
+    varThead = document.querySelector("#variableParams thead");
+    varTheadRow = varThead.insertRow();
+    varTbody = document.querySelector("#variableParams tbody");
+    varTbodyRow = varTbody.insertRow();
+
+    if (!vap[action]) {
+        theadCell = varTheadRow.insertCell();
+        theadCell.textContent = "N/A";
+        tbodyCell = varTbodyRow.insertCell();
+        tbodyCell.innerHTML = "&nbsp;"
+        document.getElementById("selectVap").selectedIndex = 0;
+        return;
+    }
+
+    vap[action][situation].forEach(function (v) {
+        var val = (v.p * 100.0).toPrecision(3),
+            grad = "linear-gradient(0deg, gainsboro " + val + "%, #fafafa " + val + "%)";
+
+        theadCell = varTheadRow.insertCell();
+        tbodyCell = varTbodyRow.insertCell();
+
+        theadCell.textContent = v.val.toPrecision(2);
+
+        if (val > 0.0) {
+            tbodyCell.style.background = grad;
+        } else {
+            tbodyCell.style.background = "";
+        }
+
+        tbodyCell.textContent = v.p.toPrecision(2);
+
+        if (action === current.action && situation === current.result.join(", ")) {
+            if (v.val.toPrecision(2) === current.action_parameter.toPrecision(2)) {
+                tbodyCell.className = "current-param";
+                theadCell.className = "current-param";
+            }
+        }
+    });
+
+    varTable.appendChild(varThead);
+    varTable.appendChild(varTbody);
+
+    document.getElementById("selectVap").value = action + ":" + situation;
+}
+
+function behaviorTable() {
+    var textMatch = current.result.join(", ");
+
+    // reset current action state
+    current.action = "A";
+
+    // find behavior - this should be done in a data structure and not an HTML table
+    [].forEach.call(document.querySelectorAll("#behaviors th"), function(el) {
+        if (el.textContent === textMatch) {
+            el.parentElement.className = "matched";
+            current.action = el.nextSibling.textContent;
+        } else {
+            el.parentElement.className = "";
+        }
+    });
+
+    current.action_parameter = getVariableParam();
+}
+
+function generateSituation() {
+    current.situation = current.result;
+    current.result = current.result.map(function (perception, index) {
+        var rnd = Math.random(),
+            likelihood = 0.500000000; // this is a product of the environment
+        return (rnd * current.consequences[index] > likelihood) ? 1 : 0;
+    });
+    document.getElementById("display-situation").textContent = current.result.join(", ");
+    console.log("result situation: ", current.result.join(", "));
+}
+
+function aggregateSs(group) {
+    group = group.map(function (feeling) {
+        return Math.abs(feeling);
+    });
+
+    group.sort(function (a, b) {
+        return b - a;
+    });
+
+    return group.reduce(function (a, b) {
+        return b * (1.0 - a) + a;
+    }, 0.0);
+}
+
+function aggregateCurrentSs() {
+    var pleasure = [],
+        pain = [];
+
+    current.subjective_senses.forEach(function (feeling) {
+        if (feeling > 0.0) {
+            pleasure.push(feeling);
+        } else {
+            pain.push(feeling);
+        }
+    });
+
+    return aggregateSs(pleasure) - aggregateSs(pain);
+}
+
+function subjectiveSenses() {
+    var ssAggregate = aggregateCurrentSs(),
+        varParam,
+        v;
+
+    if (current.action_parameter) {
+        // tune the variable
+        varParam = vap[current.action][current.situation.join(", ")];
+        v = getVar(varParam, current.action_parameter);
+        v.p = parseFloat(v.p) + ssAggregate;
+        if (v.p < 0.0) {
+            v.p = 0.0;
+        }
+        normalizeVap();
+    }
+
+    displayVap(current.action, current.situation.join(", "));
+    vss(ssAggregate);
+
+    // Clear persistent subjective senses
+    current.subjective_senses.length = 0;
+}
+
+function currentVss() {
+    var vssRows = document.querySelectorAll("#vss tbody tr"), ii, len = vssRows.length, vssSit, vssVal;
+    for (ii = 0; ii < len; ii += 1) {
+        vssSit = vssRows[ii].getElementsByTagName("th")[0].textContent;
+        vssVal = vssRows[ii].getElementsByTagName("td")[0].textContent;
+
+        if (current.result.join(", ") === vssSit) {
+            return parseFloat(vssVal) / 100;
+        }
+    }
+    return 0.0;
+}
+
+function turn(amount) {
+    console.groupEnd();
+    console.group("turn " + turn_count);
+    document.getElementById("turn-count").textContent = turn_count;
+    turn_count += 1;
+
+    generateSituation();
+    current.subjective_senses.push(currentVss() * 0.5);
+    subjectiveSenses();
+    behaviorTable();
+    act();
+
+    if (amount) {
+        turn(amount - 1);
+    }
+}
+
+function changeDispVar() {
+    var sel = document.getElementById("selectVap"),
+        actionSit = sel.value.split(":");
+
+    displayVap(actionSit[0], actionSit[1]);
+}
+
+function buildVpSelect() {
+    var a, b, opt, optgroup, sel = document.getElementById("selectVap");
+    opt = document.createElement("option");
+    opt.textContent = "Select VAP";
+    sel.appendChild(opt);
+
+    for (a in vap) {
+        if (vap.hasOwnProperty(a)) {
+            optgroup = document.createElement("optgroup");
+            optgroup.label = "Action " + a;
+
+            for (b in vap[a]) {
+                if (vap[a].hasOwnProperty(b)) {
+                    opt = document.createElement("option");
+                    opt.value = a + ":" + b;
+                    opt.textContent = a + " [" + b + "]";
+                    optgroup.appendChild(opt);
+                }
+            }
+
+            sel.appendChild(optgroup);
+        }
+    }
+    sel.onchange = changeDispVar;
+}
+
+function init() {
+    buildVpSelect()
+    turn();
+}
+
+window.onload = init;
+</script>

@@ -107,8 +107,12 @@
         }
 
         bap[action][situation].forEach(function (v) {
-            var val = (v.likelihood * 100.0).toPrecision(3),
-                grad = "linear-gradient(0deg, gainsboro " + val + "%, #fafafa " + val + "%)";
+            var val, grad;
+            if (isNaN(v.likelihood)) {
+                return;
+            }
+            val = (v.likelihood * 100.0).toPrecision(3);
+            grad = "linear-gradient(0deg, gainsboro " + val + "%, #fafafa " + val + "%)";
 
             theadCell = varTheadRow.insertCell();
             tbodyCell = varTbodyRow.insertCell();
@@ -178,12 +182,19 @@
             chosenIndex;
 
         max_likelihood = blurry_params.reduce(function (a, b) {
+            if (isNaN(b.likelihood)) {
+                return a;
+            }
             return a + b.likelihood;
         }, 0.0);
 
         blurry_params.forEach(function (blurry_param, index) {
-            var probability = blurry_param.likelihood / max_likelihood,
-                upper_probability_range = lower_probability_range + probability;
+            var probability, upper_probability_range;
+            if (isNaN(blurry_param.likelihood)) {
+                return;
+            }
+            probability = blurry_param.likelihood / max_likelihood;
+            upper_probability_range = lower_probability_range + probability;
 
             if (rnd >= lower_probability_range && rnd < upper_probability_range) {
                 chosenIndex = index;
@@ -224,21 +235,37 @@
         displaySubjectiveSense.textContent = subjectiveSense.toPrecision(2);
     }
 
-    function pruneUnlikelyBap(threshold) {
+    function addSplitBap(newLikelikhood) {
+        // first, check for a free side
         var selected_bap = bap[current.action][current.situation.join(", ")];
+        // if found, add a new value of equal accuracy and new likelihood
+        // if not, split the remaining up into one extra
+    }
+
+    function pruneUnlikelyBap(threshold) {
+        var selected_bap = bap[current.action][current.situation.join(", ")],
+            removed_params = 0;
 
         bap[current.action][current.situation.join(", ")] = selected_bap.map(function (p) {
             if (p.likelihood < threshold) {
-                return {"param": p.param, "likelihood": 0};
+                removed_params += 1;
+                return {"param": p.param, "likelihood": "x"};
             }
             return p;
         });
+
+        if (removed_params) {
+            addSplitBap(removed_params);
+        }
     }
 
     function normalizeBap() {
         // check if any params are over 1.0
         var selected_bap = bap[current.action][current.situation.join(", ")],
             highest_likelihood = selected_bap.reduce(function (a, p) {
+                if (isNaN(p.likelihood)) {
+                    return 0.0;
+                }
                 if (p.likelihood > a) {
                     return p.likelihood;
                 }
@@ -246,18 +273,19 @@
             }, 0.0);
 
         // if so, divide all by whatever is needed to normalize
-        if (highest_likelihood > 1.0) {
-            bap[current.action][current.situation.join(", ")] = selected_bap.map(function (p) {
-                return {"param": p.param, "likelihood": p.likelihood / parseFloat(highest_likelihood)};
-            });
-            selected_bap = bap[current.action][current.situation.join(", ")];
-        }
+        bap[current.action][current.situation.join(", ")] = selected_bap.map(function (p) {
+            return {"param": p.param, "likelihood": p.likelihood / parseFloat(highest_likelihood)};
+        });
+        selected_bap = bap[current.action][current.situation.join(", ")];
     }
 
     function tuneBap(action, param, situation) {
         var blurry_params = bap[action][situation.join(", ")];
 
         blurry_params.forEach(function (blurry_param) {
+            if (isNaN(blurry_param.likelihood)) {
+                return;
+            }
             if (blurry_param.param.toPrecision(3) === param.toPrecision(3)) {
                 blurry_param.likelihood += current.subjective_sense;
             }

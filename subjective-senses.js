@@ -7,19 +7,19 @@
             situation: [0, 0]
         },
         behaviors = [
-            {"situation": "0, 0", "action": "X: 0.0"},
-            {"situation": "0, 1", "action": "X: 1.0"},
-            {"situation": "1, 0", "action": "Y: 3.0"},
-            {"situation": "1, 1", "action": "Y: 4.0"}
+            {"situation": "0, 0", "action": "M: 0.0"},
+            {"situation": "0, 1", "action": "M: 1.0"},
+            {"situation": "1, 0", "action": "E: 3.0"},
+            {"situation": "1, 1", "action": "E: 4.0"}
         ],
         actions = {};
 
     // Actions
-    actions.X = function (param) {
+    actions.M = function (param) {
         return -0.001 + parseFloat(param) / 500.0 * -1;
     };
 
-    actions.Y = function (param, sit) {
+    actions.E = function (param, sit) {
         if (sit[0] && param >= 3.0) {
             return parseFloat(param) / 100.0 * -1 + 0.05;
         }

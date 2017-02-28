@@ -9,20 +9,20 @@
             action_parameter: 0.0
         },
         behaviors = [
-            {"situation": "0, 0", "action": "X"},
-            {"situation": "0, 1", "action": "X"},
-            {"situation": "1, 0", "action": "Y"},
-            {"situation": "1, 1", "action": "Y"}
+            {"situation": "0, 0", "action": "M"},
+            {"situation": "0, 1", "action": "M"},
+            {"situation": "1, 0", "action": "E"},
+            {"situation": "1, 1", "action": "E"}
         ],
         actions = {},
         bap = {};
 
     // Actions
-    actions.X = function (param) {
+    actions.M = function (param) {
         return -0.001 + parseFloat(param) / 500.0 * -1;
     };
 
-    actions.Y = function (param, sit) {
+    actions.E = function (param, sit) {
         if (sit[0] && param >= 3.0) {
             return parseFloat(param) / 100.0 * -1 + 0.05;
         }
@@ -30,23 +30,23 @@
     };
 
     // Blurry action parameters
-    bap.X = {};
-    bap.X["0, 0"] = [
+    bap.M = {};
+    bap.M["0, 0"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
-    bap.X["0, 1"] = [
+    bap.M["0, 1"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
 
-    bap.Y = {};
-    bap.Y["1, 0"] = [
+    bap.E = {};
+    bap.E["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
     ];
-    bap.Y["1, 1"] = [
+    bap.E["1, 1"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
