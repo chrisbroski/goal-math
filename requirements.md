@@ -20,7 +20,7 @@
 
 ### Left to do
 
-2. Render to PDF and check length requirements
+2. Format PDF to look nice
 3. Finish final code example
 4. Clean up and publish github repository
 5. References to github, behavioral logic site
