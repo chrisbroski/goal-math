@@ -1,1 +1,1 @@
-Chris Broski earned his degree in biology at Adrian College and a Masters in Education from the University of Michigan. He has worked in software development, science education, molecular biology, and analytical chemistry.
+Chris Broski earned his undergraduate degree in biology at Adrian College and a Masters in Education at the University of Michigan. He has worked in software development, science education, molecular biology, and analytical chemistry.

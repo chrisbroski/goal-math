@@ -222,5 +222,6 @@ Creatures with emotional desire can feel, but not truly think about their situat
 
 ## External Resources
 
-Working code examples: [https://github.io/chrisbroski/goal-math](https://github.io/chrisbroski/goal-math)  
-The Foundations of Behavior Logic: [http://behavioriallogic.com/foundations](http://behavioriallogic.com/foundations)
+Companion site with working code examples: [https://chrisbroski.github.io/goal-math](https://chrisbroski.github.io/goal-math)
+
+The Foundations of Behavioral Logic: [http://behaviorallogic.com/foundation](http://behaviorallogic.com/foundation)
