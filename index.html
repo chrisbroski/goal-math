@@ -23,21 +23,21 @@ samp {
 <article>
 <h1>A Logical System of Emotional Desire</h1>
 
-<p>We design build machines to help us accomplish our goals, but can we make these machines share our feeling of desire for the goal, or are they only able to mindlessly execute instructions? I believe we can and hope to describe how such a mechanism might work.
+<p>We can design machines to help us accomplish our goals, but can we make these machines share our feeling of desire for the goal, or are they only able to mindlessly execute instructions? I believe we can and will describe how such a mechanism might work.
 
 <h2>Test Environment</h2>
 
-<p>For easy experimentation and examples, I have created a universe will a very few, simple rules. Every turn in this world has a 50% chance of a resource appearing close by and a 50% chance of one appearing just out of reach. Click on the <em>New Turn</em> button a few times for an example of how this world works.
+<p>For easy experimentation and examples, I have created a universe with a very few, simple rules. Every turn in this world gives a 50% chance of a resource appearing close by and a 50% chance of one appearing just out of reach. Click on the <em>New Turn</em> button a few times for an example of how this works.
 
 <p>
     <button>New Turn</button>
     <samp id="turn-count"></samp>
-    Resource close: <samp id="resource-a"></samp>
+    Resource close by: <samp id="resource-a"></samp>,
     Resource distant: <samp id="resource-b"></samp>
 
 <h2>Behavior</h2>
 
-<p>My goal is to design a creature that strives to gather as many resources as possible. It will need to sense when a resource is close (within gathering distance) and farther away which I'll label as sensors <em>A</em> and <em>B</em>. It also needs an action to gather a resource and an action to bring resources closer. I'll label these actions as <em>G</em> (gather) and <em>M</em> (move.) Both also require a value to indicate the intensity of that action. Finally we need a mechanism to associate an action to sensory situations. We can do this with a simple behavior table.
+<p>My goal is to design a creature to gather as many resources as possible. It will need to sense when a resource is close (within gathering distance) and farther away. I'll label these sensors <em>A</em> and <em>B</em>. It also needs an action to gather a resource and an action to bring resources closer. I'll label these actions <em>G</em> (gather) and <em>M</em> (move.) Both also require a parameter value to indicate the intensity of the action. Finally, we need a process that associates an action to sensory situations. We can implement this using a simple behavior table.
 
 <p>Action: <samp id="display-action"></samp>
 
@@ -46,14 +46,20 @@ samp {
 <tbody>
 </table>
 
-<ul>
+<p>Clicking on the <em>New Turn</em> button will cause this table to respond with an appropriate action. Try it a few times.
+
+<p>This is a good system that works well in a rigid and predictable environment. But if we want our creation to be flexible enough to adapt its behavior to a variety of environments, it will need to be able to feel the difference between what we (its creator) choose to be good and bad outcomes, and have the ability to change its own behavior to increase good feelings and decrease bad ones.
+
+<h3>Next Page: <a href="subjective-senses">Subjective Senses</a></h3>
+
+<!--<ul>
 <li><a href="behavior-table">Basic Behavior Choice</a>
 <li><a href="subjective_senses">Subjective Senses</a>
 <li><a href="bap">Blurry Action Parameters</a>
 <li><a href="bap_tuning">Blurry Parameter Tuning</a>
 <li><a href="vss">Virtual Subjective Senses</a>
 <li><a href=""></a>
-</ul>
+</ul>-->
 </article>
 
 <script src="behavior.js"></script>

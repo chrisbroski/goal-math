@@ -3,23 +3,24 @@
 (function () {
     "use strict";
 
-    var current = {
+    var turn_count = 0,
+        current = {
             situation: [0, 0]
         },
         behaviors = [
             {"situation": "0, 0", "action": "M: 0.0"},
             {"situation": "0, 1", "action": "M: 1.0"},
-            {"situation": "1, 0", "action": "E: 3.0"},
-            {"situation": "1, 1", "action": "E: 4.0"}
+            {"situation": "1, 0", "action": "G: 3.0"},
+            {"situation": "1, 1", "action": "G: 4.0"}
         ],
         actions = {};
 
     // Actions
     actions.M = function (param) {
-        return -0.001 + parseFloat(param) / 500.0 * -1;
+        return -0.001 - parseFloat(param) * 0.002;
     };
 
-    actions.E = function (param, sit) {
+    actions.G = function (param, sit) {
         if (sit[0] && param >= 3.0) {
             return parseFloat(param) / 100.0 * -1 + 0.05;
         }
@@ -71,6 +72,9 @@
     function generateSituation() {
         var sensorA = Math.round(Math.random()),
             sensorB = Math.round(Math.random());
+
+        turn_count += 1;
+        document.querySelector("#turn-count").textContent = turn_count;
 
         current.situation = [sensorA, sensorB];
         document.getElementById("display-sensorA").textContent = current.situation[0];

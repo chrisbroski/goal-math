@@ -11,25 +11,28 @@ Index README https://github.com/chrisbroski/index-readme/
 /* https://github.com/chrisbroski/simple-css  */
 html {padding: 10px 10px 200px; font-family: droid sans, sans-serif; }
 body {margin: 0 auto; max-width: 580px; }
-div.article > *:first-child {margin-top: 0; }
-div.article p {line-height: 1.4em; font-size: 17px; }
+article > *:first-child {margin-top: 0; }
+article p {line-height: 1.4em; font-size: 17px; }
+article li {margin: 0.4em 0; line-height: 1.2em; font-size: 17px; }
 
-h1 {padding-bottom: 0.3em; }
+h1 {padding-bottom: 0.3em; text-align: center; }
 h3 {
     font-size: 24px;
     font-weight: normal;
 }
 pre {padding: 1em; background: #eee; overflow: auto; }
 blockquote {margin: 16px 0; padding: 0 15px; color: #777; border-left: 4px solid #ddd; }
+code {padding: 0 0.2em; border: 1px solid #ddd; }
+pre code {padding: 0; border: 0 none; }
 table {border-collapse: collapse; }
 table td {border: 1px solid #ddd; padding: 6px 13px; }
 h4 {text-align: center; }
 </style>
 
 <body>
-<div class="article">
+<article>
 <div class="mdImport"></div>
-</div>
+</article>
 
 <script>
 // License for Showdown markdown to HTML convertor

@@ -18,9 +18,10 @@
 - Well and clearly written, so that it is comprehensible and enjoyable to read.
 - Accessible to a diverse, well-educated but non-specialist audience, aiming in the range between the level of Scientific American and a review article in Science or Nature.
 
-### Left to do
+### Left to do:
 
 2. Format PDF to look nice
-3. Finish final code example
+3. Finish final code examples
 4. Clean up and publish github repository
 5. References to github, behavioral logic site
+6. Submit it http://fqxi.org/community/essay/application/main
