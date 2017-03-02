@@ -8,7 +8,7 @@
             situation: [0, 0],
             action: "",
             action_parameter: 0.0,
-            subjective_sense: 0.0,
+            subjective_senses: [],
             effects: [1.0, 1.0]
         },
         behaviors = [

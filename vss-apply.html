@@ -3,22 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-<title>Tuning Blurry Action Parameters - A Logical System of Emotional Desire</title>
+<title>Applying Opinions to Blurry Parameters - A Logical System of Emotional Desire</title>
 <link rel="stylesheet" href="simple.css">
 <link rel="stylesheet" href="goal.css">
 
 <body>
 
 <article>
-<h1>Tuning Blurry Action Parameters</h1>
+<h1>Applying Opinions to Blurry Parameters</h1>
 
-<p>Our creature can evaluate the benefit and harm of actions, and can choose different action parameters. Now it needs to change the probabilities of the blurry parameters to optimal benefit. All that we need to do that is to add the subjective sense value to likelihood of the appropriate blurry parameter. Parameter likelihoods are then cleaned up by normalizing to the highest value and removing parameters beneath a low threshold.
-
-<p><button id="take-turn">New Turn</button> <button id="take-turn-x-100">x100</button>
-    <samp id="turn-count"></samp>
-    Sensor A: <samp id="display-sensorA"></samp>, Sensor B: <samp id="display-sensorB"></samp>
+<p><button id="take-turn">Random Situation</button> <button id="take-turn-x-100">x100</button> <samp id="turn-count"></samp>
+<p>Sensor A: <samp id="display-sensorA"></samp>, Sensor B: <samp id="display-sensorB"></samp>
 <p>Action: <samp id="display-action"></samp> Param: <samp id="display-param"></samp>
 <p>Subjective Sense: <samp id="display-subjective-sense"></samp>
+<p>Action Effects: <samp id="display-action-effects"></samp>
+
+<h2>Virtual Subjective Senses (Opinions)</h2>
+
+<table id="vss" class="data">
+<thead><tr><td>Situation</td><td>VSS * 100</td></tr></thead><tbody></tbody></table>
 
 <h2>Blurry Action Parameters</h2>
 
@@ -32,7 +35,7 @@
 <tbody>
 </table>
 
-<h3>Next Page: <a href="vss">Virtual Subjective Senses</a></h3>
+<h3>Next Page: <a href="vss-apply">Applying Opinions to Blurry Parameters</a></h3>
 
 <!--<ul>
 <li><a href="behavior-table">Basic Behavior Choice</a>
@@ -45,4 +48,4 @@
 
 </article>
 
-<script src="bap-tuning.js"></script>
+<script src="vss.js"></script>

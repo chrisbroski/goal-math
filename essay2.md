@@ -14,7 +14,7 @@ Though this essay is about refining broad concepts of intelligent behavior to ma
 2. It is a commonly used language, especially by those whose primary expertise is not computer programming.
 3. It can be executed natively on any computer with a current web browser.
 
-Because of "duck-typing" numeric values in JavaScript, floating-point data will be indicated by the inclusion of a decimal point. Numbers without a decimal point should be considered integers. To keep numbers small and easy to read, significant figures are not meant to indicate precision.
+Because of the "duck-typing" of numeric values in JavaScript, floating-point data will be indicated by the inclusion of a decimal point. Numbers without a decimal point should be considered integers. To keep numbers small and easy to read, significant figures are not meant to indicate precision.
 
 ### What is a Goal?
 
@@ -26,9 +26,9 @@ Well-designed creations have a purpose discernible from their morphology and env
 
 ### Habitat for Intelligent Behavior
 
-To illustrate my ideas, I am designing a creature that exists in a tiny, turn-based environment. My creature will be equipped with two objectives senses for measuring its environment that I have labelled *A* and *B*. Each sense will always read one of the two boolean values (`0` or `1`.) Every turn their values will be randomly chosen with equal probability. The creature also has two possible actions: *G* and *M* that require a numeric parameter to indicate the magnitude of the action.
+To illustrate my ideas, I am designing a creature that exists in a tiny, turn-based environment. My creature will be equipped with two objectives senses for measuring its environment that I have labelled *A* and *B*. Each sense will always read one of the two boolean values (0 or 1.) Every turn their values will be randomly chosen with equal probability. The creature also has two possible actions: *G* and *M* that require a numeric parameter to indicate the magnitude of the action.
 
-This short description of my little universe is a little cold and boring, so to make the upcoming examples easier to imagine, we can relate the creature's senses and actions to familiar things from our own world. Let's pretend that our creature needs to obtain resources for energy needed to power its senses and actions. In this scenario, we can think of action *G* as gathering resources, and action *M* as movement. We can imagine that sense A reads `1` when it is close to a resource (within gathering distance) and B is `1` when a resource is nearby, but outside of gathering range. No mathematical examples are intrinsically tied to this metaphor, but it can aid explanations to think of it in this familiar way.
+This short description of my little universe is a little cold and boring, so to make the upcoming examples easier to imagine, we can relate the creature's senses and actions to familiar things from our own world. Let's pretend that our creature needs to obtain resources for energy needed to power its senses and actions. In this scenario, we can think of action *G* as gathering resources, and action *M* as movement. We can imagine that sense A reads 1 when it is close to a resource (within gathering distance) and B is 1 when a resource is nearby, but outside of gathering range. No mathematical examples are intrinsically tied to this metaphor, but it can aid explanations to think of it in this familiar way.
 
 ### System for Behavior Choice
 
@@ -98,7 +98,7 @@ So our critter can now haphazardly choose a parameter, but making a random choic
 
 ### Blurry Parameter Tuning
 
-There would be no point to sensing pain and pleasure if it did not result in a persistent improvement in behavior. This can be achieved by adding the subjective sense result to the likelihood of the appropriate blurry parameter. If our creature is in situation `1, 0` and performs action *G* with a parameter of 3.0, it will result in a subjective sense of 0.02. This will affect the blurry parameter table for Action E/Situation [1, 0].
+There would be no point to sensing pain and pleasure if it did not result in a persistent improvement in behavior. This can be achieved by adding the subjective sense result to the likelihood of the appropriate blurry parameter. If our creature is in situation `1, 0` and performs action *G* with a parameter of 3.0, it will result in a subjective sense of 0.02. This will affect the blurry parameter table for Action G/Situation [1, 0].
 
     bap.G["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
@@ -122,7 +122,7 @@ Through the effects of tuning and normalization some parameter values may become
 
 ### Action Effects
 
-The purpose of actions are to manipulate the environment, but our creature's actions don't do anything. Let's give effects to our actions by allowing them to change the probability of the next turn's resource probabilities. We'll have action *M* increase the odds that the next situation will have a sensor *A* value of `1` if sensor *B* is currently `1` and the action *M* parameter is >= 1.0. Action *G* will increase the chances that the next situation will have a sensor value *A* of `1` if it was executed with an action parameter greater than 3.0.
+The purpose of actions are to manipulate the environment, but our creature's actions don't do anything. Let's give effects to our actions by allowing them to change the probability of the next turn's resource probabilities. We'll have action *M* increase the odds that the next situation will have a sensor *A* value of 1 if sensor *B* is currently 1 and the action *M* parameter is >= 1.0. Action *G* will increase the chances that the next situation will have a sensor value *A* of 1 if it was executed with an action parameter greater than 3.0.
 
     actions.M.effect = function (situation, param) {
         if (situation[1] && param >= 1.0) {
@@ -214,7 +214,7 @@ Creatures with emotional desire can alter their behavior toward feeling of pleas
 
 ### Conclusion
 
-But so what? Why should this creature have to experience the joy and suffering of emotional desire when it would be simpler to force it to simply execute our optimal behaviors? In the above examples, there is no advantage. In fact, blurry action parameters make it much less successful. An optimally programmed creature doesn't need to waste time and energy bothering with poor action parameters. But, what if the environment changed? What if gathering became slightly more difficult and required an action parameter of 3.1 for success? Our rigidly programmed automaton would fail, and continue to fail, until its creator intervened. But our emotional creature has the ability to feel the difference between success and failure and has been given the reins to its own behavior. Through flexible behavior, emotional creatures can thrive in multiple and unpredictably changing environments.
+But so what? Why should this creature have to experience the joy and suffering of emotional desire when it would be simpler to force it to execute programmed behaviors? In the above examples, there is no advantage. In fact, blurry action parameters make it much less successful. An optimally programmed creature doesn't need to waste time and energy bothering with poor action parameters. But, what if the environment changed? What if gathering became slightly more difficult and required an action parameter of 3.1 for success? Our rigidly programmed automaton would fail, and continue to fail, until its creator intervened. But our emotional creature has the ability to feel the difference between success and failure and has been given the reins to its own behavior. Through flexible behavior, emotional creatures can thrive in multiple and unpredictably changing environments.
 
 ### Addendum: Conscious Desire
 

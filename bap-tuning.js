@@ -12,8 +12,8 @@
         behaviors = [
             {"situation": "0, 0", "action": "M"},
             {"situation": "0, 1", "action": "M"},
-            {"situation": "1, 0", "action": "E"},
-            {"situation": "1, 1", "action": "E"}
+            {"situation": "1, 0", "action": "G"},
+            {"situation": "1, 1", "action": "G"}
         ],
         actions = {},
         bap = {},
@@ -24,7 +24,7 @@
         return -0.001 + parseFloat(param) / 500.0 * -1;
     };
 
-    actions.E = function (param, sit) {
+    actions.G = function (param, sit) {
         if (sit[0] && param >= 3.0) {
             return parseFloat(param) / 100.0 * -1 + 0.05;
         }
@@ -42,13 +42,13 @@
         {"param": 1.0, "likelihood": 1.0}
     ];
 
-    bap.E = {};
-    bap.E["1, 0"] = [
+    bap.G = {};
+    bap.G["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
     ];
-    bap.E["1, 1"] = [
+    bap.G["1, 1"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
