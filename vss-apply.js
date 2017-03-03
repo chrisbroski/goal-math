@@ -1,4 +1,5 @@
 /*jslint browser: true */
+/*globals console */
 
 (function () {
     "use strict";
@@ -7,28 +8,51 @@
             situation: [0, 0],
             action: "",
             action_parameter: 0.0,
-            subjective_sense: 0.0
+            subjective_senses: [],
+            effects: [1.0, 1.0]
         },
         behaviors = [
             {"situation": "0, 0", "action": "M"},
             {"situation": "0, 1", "action": "M"},
-            {"situation": "1, 0", "action": "E"},
-            {"situation": "1, 1", "action": "E"}
+            {"situation": "1, 0", "action": "G"},
+            {"situation": "1, 1", "action": "G"}
         ],
         actions = {},
         bap = {},
+        vss = [
+            {"situation": "0, 0", "ss": 0.0},
+            {"situation": "0, 1", "ss": 0.0},
+            {"situation": "1, 0", "ss": 0.0},
+            {"situation": "1, 1", "ss": 0.0}
+        ],
         turn_count = 0;
 
     // Actions
-    actions.M = function (param) {
-        return -0.001 + parseFloat(param) / 500.0 * -1;
+    actions.M = {};
+    actions.M.ss = function (param) {
+        return -0.001 - param * 0.002;
+    };
+    actions.M.effect = function (situation, param) {
+        if (situation[1] && param >= 1.0) {
+            return [5.0 * param, 1.0];
+        }
+        return [1.0, 1.0];
     };
 
-    actions.E = function (param, sit) {
-        if (sit[0] && param >= 3.0) {
-            return parseFloat(param) / 100.0 * -1 + 0.05;
+    actions.G = {};
+    actions.G.ss = function (param, situation) {
+        if (situation[0] && param >= 3.0) {
+            return param * -0.01 + 0.05;
         }
-        return parseFloat(param) / 100.0 * -1;
+        return param * -0.01;
+    };
+    actions.G.effect = function (situation, param) {
+        if (situation[0]) {
+            if (situation[1] && param > 3.0) {
+                return [10.0, 1.0];
+            }
+        }
+        return [1.0, 1.0];
     };
 
     // Blurry action parameters
@@ -42,13 +66,13 @@
         {"param": 1.0, "likelihood": 1.0}
     ];
 
-    bap.E = {};
-    bap.E["1, 0"] = [
+    bap.G = {};
+    bap.G["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
     ];
-    bap.E["1, 1"] = [
+    bap.G["1, 1"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
@@ -88,8 +112,6 @@
     function displayBap(action, situation) {
         var bap_table, varThead, varTheadRow, varTbody, varTbodyRow, theadCell, tbodyCell;
 
-        //document.getElementById("vpSituation").textContent = situation;
-        //document.getElementById("vpAction").textContent = action;
         bap_table = document.getElementById("blurry-action-parameters");
         clearTable(bap_table);
         varThead = document.querySelector("#blurry-action-parameters thead");
@@ -135,6 +157,31 @@
         bap_table.appendChild(varTbody);
 
         document.getElementById("select-bap").value = action + ":" + situation;
+    }
+
+    function displayVss() {
+        var vssTable = document.querySelector("#vss tbody");
+        clearTable(vssTable);
+
+        vss.sort(function (a, b) {
+            return (a.situation > b.situation);
+        });
+        vss.forEach(function (opinion) {
+            var tr = document.createElement("tr"),
+                th = document.createElement("th"),
+                td = document.createElement("td");
+
+            th.textContent = opinion.situation;
+            td.textContent = (opinion.ss * 100).toFixed(2);
+            tr.appendChild(th);
+            tr.appendChild(td);
+
+            if (opinion.situation === current.situation.join(", ")) {
+                tr.className = "matched";
+            }
+
+            vssTable.appendChild(tr);
+        });
     }
 
     function changeDispBap() {
@@ -216,14 +263,6 @@
         document.getElementById("display-sensorB").textContent = current.situation[1];
     }
 
-    function act(action, param, situation) {
-        var subjectiveSense = actions[action](param, situation),
-            displaySubjectiveSense = document.querySelector("#display-subjective-sense");
-
-        current.subjective_sense = subjectiveSense;
-        displaySubjectiveSense.textContent = subjectiveSense.toPrecision(2);
-    }
-
     function pruneUnlikelyBap(threshold) {
         var selected_bap = bap[current.action][current.situation.join(", ")];
 
@@ -267,6 +306,37 @@
         pruneUnlikelyBap(0.01);
     }
 
+    function act(action, param, situation) {
+        var display_effects = document.querySelector("#display-action-effects");
+
+        current.subjective_sense = actions[action].ss(param, situation);
+        current.effects = actions[action].effect(situation, param);
+
+        display_effects.textContent = current.effects.map(function (e) {
+            return e.toFixed(1);
+        }).join(", ");
+    }
+
+    function updateVss() {
+        var current_situation = current.situation.join(", ");
+
+        vss.forEach(function (opinion, i, a) {
+            if (current_situation === opinion.situation) {
+                a[i].ss = (opinion.ss + current.subjective_sense) / 2;
+            }
+        });
+
+        displayVss();
+    }
+
+    function subjectiveSenses() {
+        document.querySelector("#display-subjective-sense").textContent = current.subjective_sense.toPrecision(2);
+
+        updateVss();
+        tuneBap(current.action, current.action_parameter, current.situation);
+        displayBap(current.action, current.situation.join(", "));
+    }
+
     function turn(amount) {
         var behavior_index,
             action_element = document.querySelector("#display-action"),
@@ -286,8 +356,7 @@
         current.action_parameter = getBlurryParam(current.action, current.situation);
         parameter_element.textContent = current.action_parameter.toFixed(1);
         act(current.action, current.action_parameter, current.situation);
-        tuneBap(current.action, current.action_parameter, current.situation);
-        displayBap(current.action, current.situation.join(", "));
+        subjectiveSenses();
 
         if (amount && amount > 1) {
             turn(amount - 1);
