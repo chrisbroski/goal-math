@@ -10,8 +10,8 @@
             subjective_sense: 0.0
         },
         behaviors = [
-            {"situation": "0, 0", "action": "M"},
-            {"situation": "0, 1", "action": "M"},
+            {"situation": "0, 0", "action": "P"},
+            {"situation": "0, 1", "action": "P"},
             {"situation": "1, 0", "action": "G"},
             {"situation": "1, 1", "action": "G"}
         ],
@@ -20,7 +20,7 @@
         turn_count = 0;
 
     // Actions
-    actions.M = function (param) {
+    actions.P = function (param) {
         return -0.001 + parseFloat(param) / 500.0 * -1;
     };
 
@@ -32,12 +32,12 @@
     };
 
     // Blurry action parameters
-    bap.M = {};
-    bap.M["0, 0"] = [
+    bap.P = {};
+    bap.P["0, 0"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
-    bap.M["0, 1"] = [
+    bap.P["0, 1"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];

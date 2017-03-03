@@ -25,6 +25,12 @@ pre code {padding: 0; border: 0 none; }
 table {border-collapse: collapse; }
 table td {border: 1px solid #ddd; padding: 6px 13px; }
 h4 {text-align: center; }
+svg {margin: 0 2.5em 0 0; width: 100px; height: 100px; float: left; }
+circle {stroke: #000; stroke-width: 2; fill: transparent; }
+path {stroke: #000; stroke-width: 2; fill: transparent; }
+#figure1 {margin: 2em; }
+#figure1 p {text-align: center; }
+#figure1 em {padding-right: 0.1em; }
 </style>
 
 <style media="print">
@@ -36,11 +42,14 @@ article li {font-size: 12pt; }
 h1 {padding: 0 0 0.3em 0; }
 h3 {
     font-size: 16pt;
+    page-break-before: avoid; 
 }
 
 blockquote {margin: 14pt 0; padding: 0 14pt; border-left: 4pt solid #ddd; }
-code {border: 2pt solid #ddd; }
-table td {border: 2pt solid #ddd; padding: 6pt 13pt; }
+code {border: 1pt solid #ddd; }
+svg {margin: 0 2.5em 0 0; width: 70pt; height: 70pt; float: left; }
+pre {page-break-inside: avoid; }
+
 @page {
     margin: 0.75in 0;
 }

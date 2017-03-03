@@ -12,8 +12,8 @@
             effects: [1.0, 1.0]
         },
         behaviors = [
-            {"situation": "0, 0", "action": "M"},
-            {"situation": "0, 1", "action": "M"},
+            {"situation": "0, 0", "action": "P"},
+            {"situation": "0, 1", "action": "P"},
             {"situation": "1, 0", "action": "G"},
             {"situation": "1, 1", "action": "G"}
         ],
@@ -28,11 +28,11 @@
         turn_count = 0;
 
     // Actions
-    actions.M = {};
-    actions.M.ss = function (param) {
+    actions.P = {};
+    actions.P.ss = function (param) {
         return -0.001 - param * 0.002;
     };
-    actions.M.effect = function (situation, param) {
+    actions.P.effect = function (situation, param) {
         if (situation[1] && param >= 1.0) {
             return [5.0 * param, 1.0];
         }
@@ -56,12 +56,12 @@
     };
 
     // Blurry action parameters
-    bap.M = {};
-    bap.M["0, 0"] = [
+    bap.P = {};
+    bap.P["0, 0"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
-    bap.M["0, 1"] = [
+    bap.P["0, 1"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];

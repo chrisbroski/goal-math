@@ -8,15 +8,15 @@
             situation: [0, 0]
         },
         behaviors = [
-            {"situation": "0, 0", "action": "M: 0.0"},
-            {"situation": "0, 1", "action": "M: 1.0"},
+            {"situation": "0, 0", "action": "P: 0.0"},
+            {"situation": "0, 1", "action": "P: 1.0"},
             {"situation": "1, 0", "action": "G: 3.0"},
             {"situation": "1, 1", "action": "G: 4.0"}
         ],
         actions = {};
 
     // Actions
-    actions.M = function (param) {
+    actions.P = function (param) {
         return -0.001 - parseFloat(param) * 0.002;
     };
 
