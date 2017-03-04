@@ -66,8 +66,6 @@
             param = action.split(": ")[1];
 
         document.querySelector("#display-action").textContent = action;
-        //clearTable(document.querySelector("#behaviors tbody"));
-        //displayBehaviorTable(behavior);
 
         // Bitey
         document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
