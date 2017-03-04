@@ -54,3 +54,14 @@ samp {
     margin: 0 0.2em; padding: 0 0.2em;
     border: 1px solid #ddd;
 }
+
+svg {margin: 0 2.5em 0 0; width: 100px; height: 100px; float: left; }
+circle {fill: black; stroke: transparent; stroke-width: 2; }
+circle:first-child {stroke: black; fill: transparent; }
+circle.active {fill: white; stroke: black; }
+path {stroke-width: 2; fill: black; stroke: black; }
+path.active {fill: white; }
+
+p svg {
+    float: right;
+}

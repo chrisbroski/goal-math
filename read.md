@@ -79,4 +79,16 @@ The author is missionary of the religion of inherent meaning in math. I don't th
 relevance: 1/3
 interest: 4/7
 
-##
+## [The Tablet of the Metalaw](http://fqxi.org/community/forum/topic/2847)
+
+OMG finally an essay that addresses the topic! Though it was long after a lot of irrelevant stuff about math. Unfortunately the author does not draw a clear conclusion.
+
+relevance: 2/3
+interest: 5/7
+
+## [Long term stability and the meaning of life](http://fqxi.org/community/forum/topic/2846)
+
+Holy shit! I can't believe an author actually trying to answer the question! And in a biological context. A marvelous collection of information about the origins of life on earth, but of questionable relevance to the topic.
+
+relevance: 2/3
+interest: 5/7

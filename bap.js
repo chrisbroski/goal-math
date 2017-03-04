@@ -59,6 +59,11 @@
         }
     }
 
+    function displayBiteySensors() {
+        document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
+        document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
+    }
+
     function displayBehaviorTable(matched) {
         var tbody = document.querySelector("#behaviors tbody"),
             row,
@@ -82,6 +87,19 @@
             row.appendChild(td);
             tbody.appendChild(row);
         });
+    }
+
+    function displayAction(act, param) {
+        document.querySelector("#display-action").textContent = act;
+        document.querySelector("#display-param").textContent = param.toFixed(1);
+
+        // Bitey
+        document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
+        if ((act === "P" && param > 0.0) || (act === "G" && param > 3.0)) {
+            document.querySelector("#tongue").setAttribute("class", "active");
+        } else {
+            document.querySelector("#tongue").setAttribute("class", "");
+        }
     }
 
     function getBlurryParam(action, situation) {
@@ -108,7 +126,7 @@
         return blurryParams[chosenIndex].param;
     }
 
-    function behaviorTable(situation) {
+    function behave(situation) {
         var textMatch = situation.join(", "),
             behavior;
 
@@ -135,28 +153,27 @@
 
     function act(action, param, situation) {
         var subjectiveSense = actions[action](param, situation),
-            displaySubjectiveSense = document.querySelector("#display-subjective-sense");
+            displaySubjectiveSense = document.querySelector("#display-subjective-sense"),
+            displaySubjectiveSenseType = document.querySelector("#display-subjective-sense-type");
 
         current.subjective_sense = subjectiveSense;
         displaySubjectiveSense.textContent = subjectiveSense.toPrecision(2);
+        displaySubjectiveSenseType.textContent = (subjectiveSense > 0.0) ? "Happy" : "Sad";
     }
 
     function turn() {
-        var behaviorIndex,
-            displayAction = document.querySelector("#display-action"),
-            displayParameter = document.querySelector("#display-param");
+        var behaviorIndex;
 
         generateSituation();
 
-        behaviorIndex = behaviorTable(current.situation);
+        behaviorIndex = behave(current.situation);
+        displayBiteySensors();
         displayBehaviorTable(behaviorIndex);
 
         current.action = behaviors[behaviorIndex].action;
-        displayAction.textContent = current.action;
-
         current.action_parameter = getBlurryParam(current.action, current.situation);
-        displayParameter.textContent = current.action_parameter.toFixed(1);
         act(current.action, current.action_parameter, current.situation);
+        displayAction(current.action, current.action_parameter);
     }
 
     document.querySelector("#take-turn").onclick = turn;
