@@ -34,7 +34,7 @@
     };
     actions.P.effect = function (situation, param) {
         if (situation[1] && param >= 1.0) {
-            return [5.0 * param, 1.0];
+            return [5.0, 1.0];
         }
         return [1.0, 1.0];
     };
@@ -49,7 +49,7 @@
     actions.G.effect = function (situation, param) {
         if (situation[0]) {
             if (situation[1] && param > 3.0) {
-                return [10.0, 1.0];
+                return [5.0, 1.0];
             }
         }
         return [1.0, 1.0];
@@ -82,6 +82,11 @@
         while (t.rows.length > 0) {
             t.deleteRow(0);
         }
+    }
+
+    function displayBiteySensors() {
+        document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
+        document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
     }
 
     function displayBehaviorTable(matched) {
@@ -217,6 +222,19 @@
         sel.onchange = changeDispBap;
     }
 
+    function displayAction(act, param) {
+        document.querySelector("#display-action").textContent = act;
+        document.querySelector("#display-param").textContent = param.toFixed(1);
+
+        // Bitey
+        document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
+        if ((act === "P" && param > 0.0) || (act === "G" && param > 3.0)) {
+            document.querySelector("#tongue").setAttribute("class", "active");
+        } else {
+            document.querySelector("#tongue").setAttribute("class", "");
+        }
+    }
+
     function getBlurryParam(action, situation) {
         var blurry_params = bap[action][situation.join(", ")],
             max_likelihood,
@@ -330,17 +348,19 @@
     }
 
     function subjectiveSenses() {
-        document.querySelector("#display-subjective-sense").textContent = current.subjective_sense.toPrecision(2);
+        var displaySubjectiveSense = document.querySelector("#display-subjective-sense"),
+            displaySubjectiveSenseType = document.querySelector("#display-subjective-sense-type");
+
+        displaySubjectiveSense.textContent = current.subjective_sense.toPrecision(2);
 
         updateVss();
+        displaySubjectiveSenseType.textContent = (current.subjective_sense > 0.0) ? "Happy" : "Sad";
         tuneBap(current.action, current.action_parameter, current.situation);
         displayBap(current.action, current.situation.join(", "));
     }
 
     function turn(amount) {
-        var behavior_index,
-            action_element = document.querySelector("#display-action"),
-            parameter_element = document.querySelector("#display-param");
+        var behavior_index;
 
         turn_count += 1;
         document.getElementById("turn-count").textContent = turn_count;
@@ -349,13 +369,13 @@
 
         behavior_index = getBehavior(current.situation);
         displayBehaviorTable(behavior_index);
+        displayBiteySensors();
 
         current.action = behaviors[behavior_index].action;
-        action_element.textContent = current.action;
-
         current.action_parameter = getBlurryParam(current.action, current.situation);
-        parameter_element.textContent = current.action_parameter.toFixed(1);
         act(current.action, current.action_parameter, current.situation);
+        displayAction(current.action, current.action_parameter);
+
         subjectiveSenses();
 
         if (amount && amount > 1) {

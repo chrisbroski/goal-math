@@ -4,7 +4,7 @@
 
 ### Abstract
 
-Intelligent systems can exhibit the desire to accomplish a goal in several ways. *Instinctual desire* is an emergent property of physical form and programmed behavior. *Emotional desire* exists if a creature possesses subjective sensors that indicate whether situations are good or bad, and uses these as a guide to modify its own behavior toward increased benefit and decreased harm. *Conscious desire* can occur if a system has a model of how its actions affect the environment and can simulate the benefit or harm of possible consequences before acting. I describe the logical data structures and processes required to create a simple system of emotional desire.
+Intelligent systems can exhibit the desire to accomplish a goal in several ways. *Instinctual desire* is an emergent property of physical form and programmed behavior. *Emotional desire* exists if a creature possesses subjective sensors that indicate if situations are favorable or not, and uses these as a guide to modify its own behavior. *Conscious desire* can occur if a system has a model of how its actions affect the environment and can simulate the benefit or harm of possible consequences before acting. I describe the logical data structures and processes required to create a simple system of emotional desire.
 
 ### About Mathematical Notation
 
@@ -66,7 +66,7 @@ My goal is for Bitey is to gather as many resources as it can. Objective sensors
 
 ### A System of Behavior
 
-If the core of intelligence is choosing an action, let's begin with a simple data structure and process to use it. Our data is a collection of behaviors, each consisting of a single **situation** (coinciding sensory information) and an action. The *situation* property is a comma separated string of the values of sensors *C* and *F* in order. The *action* property is a combination of the action, a colon, and a value for the action parameter.
+If the core of intelligence is choosing an action, let's begin with a simple data structure and process to do that. Our data is a collection of behaviors, each consisting of a single **situation** (coinciding sensory information) and an action. The *situation* property is a comma separated string of the values of sensors *C* and *F* in order. The *action* property is a combination of the action, a colon, and a value for the action parameter.
 
     behaviors = [
         {"situation": "0, 0", "action": "P: 0.0"},
@@ -156,7 +156,7 @@ Through the effects of tuning and normalization some parameter values may become
 
 ### Action Effects
 
-Actions should be able to manipulate the environment, but Bitey's have no effects. Let's give it the ability to alter the upcoming turn's resource probabilities. We'll have action *P* make spawning a nearby resource on the next turn five times more likely if sensor *F* is 1 and action *P* has a parameter is greater than or equal to 1.0.
+Actions should be able to manipulate the environment, but Bitey's have no effects. Let's give it the ability to alter the upcoming turn's resource probabilities. We'll have action *P* make spawning a nearby resource on the next turn five times more likely if sensor *F* is 1 and action *P* has a parameter greater than or equal to 1.0.
 
     actions.P.effect = function (situation, param) {
         if (situation[1] && param >= 1.0) {
@@ -165,7 +165,7 @@ Actions should be able to manipulate the environment, but Bitey's have no effect
         return [1.0, 1.0];
     };
 
-Action *G* will increase the chances that the next turn will spawn a nearby resource if it was executed with an action parameter greater than 3.0.
+Action *G* will increase the chances that the next turn will spawn a nearby resource if it was executed with an action parameter greater than 3.0 and sensor *F* is 1.
 
     actions.G.effect = function (situation, param) {
         if (situation[0]) {
@@ -185,7 +185,7 @@ To give Bitey some wisdom about the long-term consequences of its actions, we ca
 > I've got a bad feeling about this.  
 > - Han Solo, et al.
 
-Below is a simple data structure for virtual subjective senses, or as I also refer to them, **opinions**. 
+Below is a simple data structure for virtual subjective senses, or as I also refer to them, **opinions**.
 
     opinions = [
         {"situation": "0, 0", "vss": 0.0},
@@ -213,7 +213,7 @@ For example, if situation `1, 1` results in a subjective sensory value of 0.02, 
 
 ### Subjective Sense Aggregation
 
-If we want to combine true subjective sense values with virtual ones, we will need an appropriate way to combine them. Adding them together could result in intensities greater than 1.0 or less than -1.0, inconsistent with the definition of subjective sense intensities as described above. Let's create an aggregation rule that makes more sense.
+If we want to assess both true subjective sense values and virtual ones, we will need an appropriate way to combine them. Adding them together could result in intensities greater than 1.0 or less than -1.0, inconsistent with the definition of subjective sense intensities as described above. Let's create an aggregation rule that makes more sense.
 
 First, separate the positive and negative values into collections of pleasurable and painful feelings, respectively. Then sort each by absolute value, descending.
 
@@ -263,7 +263,7 @@ But so what? Why should poor Bitey have to experience the joy and suffering of e
 
 ### Addendum: Conscious Desire
 
-Creatures with emotional desire can feel, but cannot truly think about their situation. What would Bitey need to consciously envision its goal? With a firm base of emotional desire, surprisingly little else would be required; only predictive situation data and a process for its use. The new data would be a simple collection of consequent situations resulting from a specific initial situation and action. The emotional desire process already handles this information when dealing with virtual subjective senses. Once it has sufficient understanding of how its behavior affects the environment, it can imagine the consequences of its actions and evaluate imaginary situations with its opinions to decide the best plan of action. I am continuing to research and develop this type of system, but alas, I have already expended an appropriate amount of time and words for this essay.
+Creatures with emotional desire can feel, but cannot truly think about their situation. What would Bitey need to consciously envision its goal? With a firm base of emotional desire, surprisingly little else would be required; only predictive situation data and a process for its use. The new data would be a simple collection of consequent situations resulting from a specific initial situation and action. The emotional desire process already handles this information when dealing with virtual subjective senses. Once it has sufficient understanding of how its behavior affects the environment, it can predict the consequences of its actions and use opinions of these imaginary situations to decide the best plan of action. I am continuing to research and develop this type of system, but alas, I have already expended an appropriate amount of time and words for this essay.
 
 ## External Resources
 

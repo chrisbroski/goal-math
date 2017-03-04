@@ -20,6 +20,11 @@
         }
     }
 
+    function displayBiteySensors() {
+        document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
+        document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
+    }
+
     function displayBehaviorTable(matched) {
         var tbody = document.querySelector("#behaviors tbody"),
             row,
@@ -43,7 +48,25 @@
         });
     }
 
-    function behaviorTable(situation) {
+    function displayAction(behavior) {
+        var action = behaviors[behavior].action,
+            act = action.split(": ")[0],
+            param = action.split(": ")[1];
+
+        document.querySelector("#display-action").textContent = action;
+        clearTable(document.querySelector("#behaviors tbody"));
+        displayBehaviorTable(behavior);
+
+        // Bitey
+        document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
+        if ((act === "P" && param > 0.0) || (act === "G" && param > 3.0)) {
+            document.querySelector("#tongue").setAttribute("class", "active");
+        } else {
+            document.querySelector("#tongue").setAttribute("class", "");
+        }
+    }
+
+    function behave(situation) {
         var textMatch = situation.join(", "),
             behavior;
 
@@ -53,9 +76,7 @@
             }
         });
 
-        document.querySelector("#display-action").textContent = behaviors[behavior].action;
-        clearTable(document.querySelector("#behaviors tbody"));
-        displayBehaviorTable(behavior);
+        return behavior;
     }
 
     function generateSituation() {
@@ -72,7 +93,8 @@
         document.querySelector("#turn-count").textContent = turn_count;
 
         generateSituation();
-        behaviorTable(current.situation);
+        displayAction(behave(current.situation));
+        displayBiteySensors();
     }
 
     function init() {

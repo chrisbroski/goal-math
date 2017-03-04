@@ -17,6 +17,8 @@ samp {
 #display-action {
     width: 5em;
 }
+
+strong em {padding-right: 0.1em; }
 </style>
 
 <body>
@@ -37,7 +39,27 @@ samp {
 
 <h2>Behavior</h2>
 
-<p>My goal is to design a creature to gather as many resources as possible. It will need to sense when a resource is close (within gathering distance) and farther away. I'll label these sensors <em>A</em> and <em>B</em>. It also needs an action to gather a resource and an action to bring resources closer. I'll label these actions <em>G</em> (gather) and <em>M</em> (move.) Both also require a parameter value to indicate the intensity of the action. Finally, we need a process that associates an action to sensory situations. We can implement this using a simple behavior table.
+<p>My goal is to design a creature to gather as many resources as possible.
+
+<div>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="48" id="body" />
+    <circle cx="30" cy="30" r="4" id="small-eye" />
+    <circle cx="70" cy="30" r="10" id="big-eye" />
+    <path d="M 35,49 C 40,92 60,92 65,49 M 50,50 L 50,75" id="tongue" />
+    <path d="M96,60 C 75,45 25,45 4,60 L 18,73 22,53 37.5,70 50,50 62.5,70 78,53 82,73 96,60" id="teeth" />
+    <line/>
+</svg>
+
+<ul>
+    <li>The little eye detects <strong><em>C</em></strong>lose resources
+    <li>The big eye detects <strong><em>F</em></strong>ar resources
+    <li>The teeth <strong><em>G</em></strong>ather resources
+    <li>The tongue <strong><em>P</em></strong>ulls far resources closer
+</ul>
+</div>
+
+<p>I call this little guy "Bitey". To have behavior, it requires a process to associate an action to sensory situations. We can implement this using a simple behavior table.
 
 <p>Action: <samp id="display-action"></samp>
 
@@ -52,14 +74,6 @@ samp {
 
 <h3>Next Page: <a href="subjective-senses">Subjective Senses</a></h3>
 
-<!--<ul>
-<li><a href="behavior-table">Basic Behavior Choice</a>
-<li><a href="subjective_senses">Subjective Senses</a>
-<li><a href="bap">Blurry Action Parameters</a>
-<li><a href="bap_tuning">Blurry Parameter Tuning</a>
-<li><a href="vss">Virtual Subjective Senses</a>
-<li><a href=""></a>
-</ul>-->
 </article>
 
 <script src="behavior.js"></script>
