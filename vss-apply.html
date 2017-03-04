@@ -12,10 +12,23 @@
 <article>
 <h1>Applying Opinions to Blurry Parameters</h1>
 
-<p><button id="take-turn">Random Situation</button> <button id="take-turn-x-100">x100</button> <samp id="turn-count"></samp>
-<p>Sensor A: <samp id="display-sensorA"></samp>, Sensor B: <samp id="display-sensorB"></samp>
+<p>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" id="body" />
+        <circle cx="30" cy="30" r="4" id="small-eye" />
+        <circle cx="70" cy="30" r="10" id="big-eye" />
+        <path d="M 35,49 C 40,92 60,92 65,49 M 50,50 L 50,75" id="tongue" />
+        <path d="M96,60 C 75,45 25,45 4,60 L 18,73 22,53 37.5,70 50,50 62.5,70 78,53 82,73 96,60" id="teeth" />
+        <line/>
+    </svg>
+
+    <button id="take-turn">New Turn</button> <button id="take-turn-x-100">x100</button> <samp id="turn-count"></samp>
+    Sensor C: <samp id="display-sensorA"></samp>, Sensor F: <samp id="display-sensorB"></samp>
+
 <p>Action: <samp id="display-action"></samp> Param: <samp id="display-param"></samp>
-<p>Subjective Sense: <samp id="display-subjective-sense"></samp>
+<p>Subjective Sense:
+    <samp id="display-subjective-sense"></samp>
+    (<span id="display-subjective-sense-type"></span>)
 <p>Action Effects: <samp id="display-action-effects"></samp>
 
 <h2>Virtual Subjective Senses (Opinions)</h2>
