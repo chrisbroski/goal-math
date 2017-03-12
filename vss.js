@@ -84,9 +84,12 @@
         }
     }
 
-    function displayBiteySensors() {
+    function displaySensors() {
         document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
         document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
+
+        document.getElementById("display-sensorA").textContent = current.situation[0];
+        document.getElementById("display-sensorB").textContent = current.situation[1];
     }
 
     function displayBehaviorTable(matched) {
@@ -97,12 +100,12 @@
 
         clearTable(document.querySelector("#behaviors tbody"));
 
-        behaviors.forEach(function (b, index) {
+        behaviors.forEach(function (b) {
             row = document.createElement("tr");
             th = document.createElement("th");
             td = document.createElement("td");
 
-            if (index === matched) {
+            if (b.situation === matched) {
                 row.className = "matched";
             }
             th.textContent = b.situation;
@@ -263,9 +266,9 @@
         var textMatch = situation.join(", "),
             behavior;
 
-        behaviors.forEach(function (b, index) {
+        behaviors.forEach(function (b) {
             if (b.situation === textMatch) {
-                behavior = index;
+                behavior = b;
             }
         });
 
@@ -277,8 +280,6 @@
             sensorB = Math.round(Math.random());
 
         current.situation = [sensorA, sensorB];
-        document.getElementById("display-sensorA").textContent = current.situation[0];
-        document.getElementById("display-sensorB").textContent = current.situation[1];
     }
 
     function pruneUnlikelyBap(threshold) {
@@ -359,19 +360,23 @@
         displayBap(current.action, current.situation.join(", "));
     }
 
-    function turn(amount) {
-        var behavior_index;
+    function behave() {
+        var behavior;
 
+        behavior = getBehavior(current.situation);
+        current.action = behavior.action;
+    }
+
+    function turn(amount) {
         turn_count += 1;
         document.getElementById("turn-count").textContent = turn_count;
 
         generateSituation();
+        displaySensors();
 
-        behavior_index = getBehavior(current.situation);
-        displayBehaviorTable(behavior_index);
-        displayBiteySensors();
+        behave();
+        displayBehaviorTable(current.situation.join(", "));
 
-        current.action = behaviors[behavior_index].action;
         current.action_parameter = getBlurryParam(current.action, current.situation);
         act(current.action, current.action_parameter, current.situation);
         displayAction(current.action, current.action_parameter);

@@ -79,8 +79,6 @@ var elSsLog = document.getElementById("ssLog"),
 // Actions
 actions.X = {};
 actions.X.cost = function (sit, param) {
-    //current.subjective_senses.push(-0.001);
-    //current.subjective_senses.push(param / 500.0 * -1);
     return [-0.001, param / 500.0 * -1];
 };
 actions.X.effect = function (sit, param) {
@@ -92,10 +90,7 @@ actions.X.effect = function (sit, param) {
 
 actions.Y = {};
 actions.Y.cost = function (sit, param) {
-    //current.subjective_senses.push(param / 100.0 * -1);
-
     if (sit[0]) {
-        //current.subjective_senses.push((param >= 3.0) ? 0.05 : 0.0);
         return [param / 100.0 * -1, (param >= 3.0) ? 0.05 : 0.0];
     }
     return [param / 100.0 * -1];
