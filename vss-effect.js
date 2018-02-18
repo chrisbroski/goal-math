@@ -1,54 +1,82 @@
 /*jslint browser: true */
+/*globals console */
 
 (function () {
     "use strict";
 
-    var current = {
+    var environment = {
+            resourceClose: 0.2,
+            resourceFar: 0.8
+        },
+        current = {
             situation: [0, 0],
             action: "",
             action_parameter: 0.0,
-            subjective_sense: 0.0
+            subjective_sense: 0.0,
+            effects: {}
         },
         behaviors = [
-            {"situation": "0, 0", "action": "P"},
-            {"situation": "0, 1", "action": "P"},
-            {"situation": "1, 0", "action": "G"},
-            {"situation": "1, 1", "action": "G"}
+            {"situation": "0, 0", "action": "pull"},
+            {"situation": "0, 1", "action": "pull"},
+            {"situation": "1, 0", "action": "gather"},
+            {"situation": "1, 1", "action": "gather"}
         ],
         actions = {},
         bap = {},
+        vss = [
+            {"situation": "0, 0", "ss": 0.0},
+            {"situation": "0, 1", "ss": 0.0},
+            {"situation": "1, 0", "ss": 0.0},
+            {"situation": "1, 1", "ss": 0.0}
+        ],
         turn_count = 0;
 
     // Actions
-    actions.P = function (param) {
-        return -0.001 + parseFloat(param) / 500.0 * -1;
+    actions.pull = {};
+    actions.pull.ss = function (param) {
+        return -0.001 - param * 0.002;
+    };
+    actions.pull.effect = function (situation, param) {
+        if (situation[1] && param >= 1.0) {
+            return [5.0, 1.0];
+        }
+        return [1.0, 1.0];
     };
 
-    actions.G = function (param, sit) {
-        if (sit[0] && param >= 3.0) {
-            return parseFloat(param) / 100.0 * -1 + 0.05;
+    actions.gather = {};
+    actions.gather.ss = function (param, situation) {
+        if (situation[0] && param >= 3.0) {
+            return param * -0.01 + 0.05;
         }
-        return parseFloat(param) / 100.0 * -1;
+        return param * -0.01;
+    };
+    actions.gather.effect = function (situation, param) {
+        if (situation[0]) {
+            if (situation[1] && param > 3.0) {
+                return [5.0, 1.0];
+            }
+        }
+        return [1.0, 1.0];
     };
 
     // Blurry action parameters
-    bap.P = {};
-    bap.P["0, 0"] = [
+    bap.pull = {};
+    bap.pull["0, 0"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
-    bap.P["0, 1"] = [
+    bap.pull["0, 1"] = [
         {"param": 0.0, "likelihood": 1.0},
         {"param": 1.0, "likelihood": 1.0}
     ];
 
-    bap.G = {};
-    bap.G["1, 0"] = [
+    bap.gather = {};
+    bap.gather["1, 0"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
     ];
-    bap.G["1, 1"] = [
+    bap.gather["1, 1"] = [
         {"param": 2.0, "likelihood": 1.0},
         {"param": 3.0, "likelihood": 1.0},
         {"param": 4.0, "likelihood": 1.0}
@@ -60,9 +88,12 @@
         }
     }
 
-    function displayBiteySensors() {
+    function displaySensors() {
         document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
         document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
+
+        document.getElementById("display-sensorC").textContent = current.situation[0];
+        document.getElementById("display-sensorF").textContent = current.situation[1];
     }
 
     function displayBehaviorTable(matched) {
@@ -73,12 +104,12 @@
 
         clearTable(document.querySelector("#behaviors tbody"));
 
-        behaviors.forEach(function (b, index) {
+        behaviors.forEach(function (b) {
             row = document.createElement("tr");
             th = document.createElement("th");
             td = document.createElement("td");
 
-            if (index === matched) {
+            if (b.situation === matched) {
                 row.className = "matched";
             }
             th.textContent = b.situation;
@@ -93,8 +124,6 @@
     function displayBap(action, situation) {
         var bap_table, varThead, varTheadRow, varTbody, varTbodyRow, theadCell, tbodyCell;
 
-        //document.getElementById("vpSituation").textContent = situation;
-        //document.getElementById("vpAction").textContent = action;
         bap_table = document.getElementById("blurry-action-parameters");
         clearTable(bap_table);
         varThead = document.querySelector("#blurry-action-parameters thead");
@@ -142,6 +171,31 @@
         document.getElementById("select-bap").value = action + ":" + situation;
     }
 
+    function displayVss() {
+        var vssTable = document.querySelector("#vss tbody");
+        clearTable(vssTable);
+
+        vss.sort(function (a, b) {
+            return (a.situation > b.situation);
+        });
+        vss.forEach(function (opinion) {
+            var tr = document.createElement("tr"),
+                th = document.createElement("th"),
+                td = document.createElement("td");
+
+            th.textContent = opinion.situation;
+            td.textContent = (opinion.ss * 100).toFixed(2);
+            tr.appendChild(th);
+            tr.appendChild(td);
+
+            if (opinion.situation === current.situation.join(", ")) {
+                tr.className = "matched";
+            }
+
+            vssTable.appendChild(tr);
+        });
+    }
+
     function changeDispBap() {
         var sel = document.getElementById("select-bap"),
             actionSit = sel.value.split(":");
@@ -180,8 +234,8 @@
         document.querySelector("#display-param").textContent = param.toFixed(1);
 
         // Bitey
-        document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
-        if ((act === "P" && param > 0.0) || (act === "G" && param > 3.0)) {
+        document.querySelector("#teeth").setAttribute("class", (act === "gather") ? "active" : "");
+        if ((act === "pull" && param > 0.0) || (act === "gather" && param > 3.0)) {
             document.querySelector("#tongue").setAttribute("class", "active");
         } else {
             document.querySelector("#tongue").setAttribute("class", "");
@@ -216,9 +270,9 @@
         var textMatch = situation.join(", "),
             behavior;
 
-        behaviors.forEach(function (b, index) {
+        behaviors.forEach(function (b) {
             if (b.situation === textMatch) {
-                behavior = index;
+                behavior = b;
             }
         });
 
@@ -226,22 +280,9 @@
     }
 
     function generateSituation() {
-        var sensorC = +(Math.random() < 0.20000000),
-            sensorF = +(Math.random() < 0.80000000);
-
-        current.situation = [sensorC, sensorF];
-        document.getElementById("display-sensorC").textContent = current.situation[0];
-        document.getElementById("display-sensorF").textContent = current.situation[1];
-    }
-
-    function act(action, param, situation) {
-        var subjectiveSense = actions[action](param, situation),
-            displaySubjectiveSense = document.querySelector("#display-subjective-sense"),
-            displaySubjectiveSenseType = document.querySelector("#display-subjective-sense-type");
-
-        current.subjective_sense = subjectiveSense;
-        displaySubjectiveSense.textContent = subjectiveSense.toPrecision(2);
-        displaySubjectiveSenseType.textContent = (subjectiveSense > 0.0) ? "Happy" : "Sad";
+        current.situation = Object.keys(environment).map(function (thing) {
+            return +(Math.random() < environment[thing]);
+        });
     }
 
     function pruneUnlikelyBap(threshold) {
@@ -287,29 +328,63 @@
         pruneUnlikelyBap(0.01);
     }
 
-    function turn(amount) {
-        var behavior_index,
-            action_element = document.querySelector("#display-action"),
-            parameter_element = document.querySelector("#display-param");
+    function act(action, param, situation) {
+        var display_effects = document.querySelector("#display-action-effects");
 
+        current.subjective_sense = actions[action].ss(param, situation);
+        current.effects = actions[action].effect(situation, param);
+
+        display_effects.textContent = current.effects.map(function (e) {
+            return e.toFixed(1);
+        }).join(", ");
+    }
+
+    function updateVss() {
+        var current_situation = current.situation.join(", ");
+
+        vss.forEach(function (opinion, i, a) {
+            if (current_situation === opinion.situation) {
+                a[i].ss = (opinion.ss + current.subjective_sense) / 2;
+            }
+        });
+
+        displayVss();
+    }
+
+    function subjectiveSenses() {
+        var displaySubjectiveSense = document.querySelector("#display-subjective-sense"),
+            displaySubjectiveSenseType = document.querySelector("#display-subjective-sense-type");
+
+        displaySubjectiveSense.textContent = current.subjective_sense.toPrecision(2);
+
+        updateVss();
+        displaySubjectiveSenseType.textContent = (current.subjective_sense > 0.0) ? "Happy" : "Sad";
+        tuneBap(current.action, current.action_parameter, current.situation);
+        displayBap(current.action, current.situation.join(", "));
+    }
+
+    function behave() {
+        var behavior;
+
+        behavior = getBehavior(current.situation);
+        current.action = behavior.action;
+    }
+
+    function turn(amount) {
         turn_count += 1;
         document.getElementById("turn-count").textContent = turn_count;
 
         generateSituation();
+        displaySensors();
 
-        behavior_index = getBehavior(current.situation);
-        displayBehaviorTable(behavior_index);
-        displayBiteySensors();
-
-        current.action = behaviors[behavior_index].action;
-        action_element.textContent = current.action;
+        behave();
+        displayBehaviorTable(current.situation.join(", "));
 
         current.action_parameter = getBlurryParam(current.action, current.situation);
-        parameter_element.textContent = current.action_parameter.toFixed(1);
         act(current.action, current.action_parameter, current.situation);
         displayAction(current.action, current.action_parameter);
-        tuneBap(current.action, current.action_parameter, current.situation);
-        displayBap(current.action, current.situation.join(", "));
+
+        subjectiveSenses();
 
         if (amount && amount > 1) {
             turn(amount - 1);

@@ -90,15 +90,15 @@
     }
 
     function generateSituation() {
-        var sensorA = Math.round(Math.random()),
-            sensorB = Math.round(Math.random());
+        var sensorC = +(Math.random() < 0.20000000),
+            sensorF = +(Math.random() < 0.80000000);
 
         turn_count += 1;
         document.querySelector("#turn-count").textContent = turn_count;
 
-        current.situation = [sensorA, sensorB];
-        document.getElementById("display-sensorA").textContent = current.situation[0];
-        document.getElementById("display-sensorB").textContent = current.situation[1];
+        current.situation = [sensorC, sensorF];
+        document.getElementById("display-sensorC").textContent = current.situation[0];
+        document.getElementById("display-sensorF").textContent = current.situation[1];
     }
 
     function act(a) {

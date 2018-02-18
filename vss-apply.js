@@ -4,7 +4,11 @@
 (function () {
     "use strict";
 
-    var current = {
+    var environment = {
+            resourceClose: 0.2,
+            resourceFar: 0.8
+        },
+        current = {
             situation: [0, 0],
             action: "",
             action_parameter: 0.0,
@@ -284,6 +288,13 @@
         });
         /*jslint unparam: false*/
     }
+
+    /*function generateSituation() {
+        var sensorC = +(Math.random() < 0.20000000),
+            sensorF = +(Math.random() < 0.80000000);
+
+        current.situation = [sensorC, sensorF];
+    }*/
 
     function pruneUnlikelyBap(threshold) {
         var selected_bap = bap[current.action][current.situation.join(", ")];

@@ -4,7 +4,11 @@
 (function () {
     "use strict";
 
-    var current = {
+    var environment = {
+            resourceClose: 0.2,
+            resourceFar: 0.8
+        },
+        current = {
             situation: [0, 0],
             action: "",
             action_parameter: 0.0,
@@ -88,8 +92,8 @@
         document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
         document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
 
-        document.getElementById("display-sensorA").textContent = current.situation[0];
-        document.getElementById("display-sensorB").textContent = current.situation[1];
+        document.getElementById("display-sensorC").textContent = current.situation[0];
+        document.getElementById("display-sensorF").textContent = current.situation[1];
     }
 
     function displayBehaviorTable(matched) {
@@ -276,10 +280,9 @@
     }
 
     function generateSituation() {
-        var sensorA = Math.round(Math.random()),
-            sensorB = Math.round(Math.random());
-
-        current.situation = [sensorA, sensorB];
+        current.situation = Object.keys(environment).map(function (thing) {
+            return +(Math.random() < environment[thing]);
+        });
     }
 
     function pruneUnlikelyBap(threshold) {

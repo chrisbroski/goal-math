@@ -3,32 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-<title>Applying Opinions to Blurry Parameters - A Logical System of Emotional Desire</title>
+<title>Action Effects - A Logical System of Emotional Desire</title>
 <link rel="stylesheet" href="simple.css">
 <link rel="stylesheet" href="goal.css">
 
 <body>
 
 <article>
-<h1>Applying Opinions to Blurry Parameters</h1>
+<h1>Action Effects on the Environment</h1>
 
 <p>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="48" id="body"></circle>
-        <circle cx="30" cy="30" r="4" id="small-eye"></circle>
-        <circle cx="70" cy="30" r="10" id="big-eye"></circle>
-        <path d="M 35,49 C 40,92 60,92 65,49 M 50,50 L 50,75" id="tongue"></path>
-        <path d="M96,60 C 75,45 25,45 4,60 L 18,73 22,53 37.5,70 50,50 62.5,70 78,53 82,73 96,60" id="teeth"></path>
+        <circle cx="50" cy="50" r="48" id="body" />
+        <circle cx="30" cy="30" r="4" id="small-eye" />
+        <circle cx="70" cy="30" r="10" id="big-eye" />
+        <path d="M 35,49 C 40,92 60,92 65,49 M 50,50 L 50,75" id="tongue" />
+        <path d="M96,60 C 75,45 25,45 4,60 L 18,73 22,53 37.5,70 50,50 62.5,70 78,53 82,73 96,60" id="teeth" />
         <line/>
     </svg>
 
-    <button id="take-turn">New Turn</button> <button id="take-turn-x-100">x100</button> <samp id="turn-count"></samp>
+    <button id="take-turn">New Turn</button> <button id="take-turn-x-100">x100</button>
+    <samp id="turn-count"></samp>
     Sensor C: <samp id="display-sensorC"></samp>, Sensor F: <samp id="display-sensorF"></samp>
 
 <p>Action: <samp id="display-action"></samp> Param: <samp id="display-param"></samp>
-<p>Subjective Sense: <samp id="display-subjective-sense"></samp>
-    Opinion: <samp id="display-opinion"></samp>
-    Aggregate: <samp id="display-aggregate-ss"></samp>
+<p>Subjective Sense:
+    <samp id="display-subjective-sense"></samp>
     (<span id="display-subjective-sense-type"></span>)
 
 <p>Action Effects: <samp id="display-action-effects"></samp>
@@ -46,12 +46,12 @@
 <h2>Behavior Table</h2>
 
 <table id="behaviors" class="data">
-<thead><tr><td>Situation<br>(Sensor A, B)<td>Action
+<thead><tr><td>Situation<br>(Sensor C, F)<td>Action
 <tbody>
 </table>
 
-<!--<h3>Next Page: <a href="vss-apply">Applying Opinions to Blurry Parameters</a></h3>-->
+<h3>Next Page: Coming Soon<!--<a href="vss-apply">Applying Opinions to Blurry Parameters</a>--></h3>
 
 </article>
 
-<script src="vss-apply.js"></script>
+<script src="vss.js"></script>

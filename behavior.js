@@ -80,12 +80,12 @@
     }
 
     function generateSituation() {
-        var sensorA = Math.round(Math.random()),
-            sensorB = Math.round(Math.random());
+        var sensorC = +(Math.random() < 0.20000000),
+            sensorF = +(Math.random() < 0.80000000);
 
-        current.situation = [sensorA, sensorB];
-        document.querySelector("#resource-a").textContent = sensorA;
-        document.querySelector("#resource-b").textContent = sensorB;
+        current.situation = [sensorC, sensorF];
+        document.querySelector("#resource-c").textContent = sensorC;
+        document.querySelector("#resource-f").textContent = sensorF;
     }
 
     function turn() {
