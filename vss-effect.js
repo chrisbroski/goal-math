@@ -36,27 +36,23 @@
     actions.pull.ss = function (param) {
         return -0.001 - param * 0.002;
     };
-    actions.pull.effect = function (situation, param) {
-        if (situation[1] && param >= 1.0) {
-            return [5.0, 1.0];
+    actions.pull.effect = function (param, situation) {
+        if (situation[1] && parseFloat(param) >= 1.0) {
+            current.effects.resourceClose = 0.8;
         }
-        return [1.0, 1.0];
     };
 
     actions.gather = {};
     actions.gather.ss = function (param, situation) {
-        if (situation[0] && param >= 3.0) {
-            return param * -0.01 + 0.05;
+        if (situation[0] && parseFloat(param) >= 3.0) {
+            return parseFloat(param) * -0.1 + 0.5;
         }
-        return param * -0.01;
+        return param * -0.1;
     };
-    actions.gather.effect = function (situation, param) {
-        if (situation[0]) {
-            if (situation[1] && param > 3.0) {
-                return [5.0, 1.0];
-            }
+    actions.gather.effect = function (param, situation) {
+        if (situation[0] && parseFloat(param) > 3.0) {
+            current.effects.resourceClose = 0.8;
         }
-        return [1.0, 1.0];
     };
 
     // Blurry action parameters
@@ -279,9 +275,36 @@
         return behavior;
     }
 
+    function displayEnvironment() {
+        var env = {},
+            displayEffects = document.querySelector("#display-action-effects"),
+            effects;
+
+        Object.keys(environment).forEach(function (thing) {
+            if (current.effects[thing]) {
+                env[thing] = current.effects[thing];
+            } else {
+                env[thing] = environment[thing];
+            }
+        });
+        effects = Object.keys(env).map(function (effect) {
+            return effect + ": " + env[effect];
+        });
+        displayEffects.textContent = effects.join("; ");
+    }
+
     function generateSituation() {
-        current.situation = Object.keys(environment).map(function (thing) {
-            return +(Math.random() < environment[thing]);
+        var effectedEnvironment = {};
+
+        Object.keys(environment).forEach(function (thing) {
+            if (current.effects[thing]) {
+                effectedEnvironment[thing] = current.effects[thing];
+            } else {
+                effectedEnvironment[thing] = environment[thing];
+            }
+        });
+        current.situation = Object.keys(effectedEnvironment).map(function (thing) {
+            return +(Math.random() < effectedEnvironment[thing]);
         });
     }
 
@@ -329,14 +352,9 @@
     }
 
     function act(action, param, situation) {
-        var display_effects = document.querySelector("#display-action-effects");
-
+        current.effects = {};
         current.subjective_sense = actions[action].ss(param, situation);
-        current.effects = actions[action].effect(situation, param);
-
-        display_effects.textContent = current.effects.map(function (e) {
-            return e.toFixed(1);
-        }).join(", ");
+        actions[action].effect(param, situation);
     }
 
     function updateVss() {
@@ -374,6 +392,7 @@
         turn_count += 1;
         document.getElementById("turn-count").textContent = turn_count;
 
+        displayEnvironment();
         generateSituation();
         displaySensors();
 

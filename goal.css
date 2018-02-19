@@ -56,11 +56,11 @@ samp {
 }
 
 svg {margin: 0 2.5em 0 0; width: 100px; height: 100px; float: left; }
-circle {fill: black; stroke: transparent; stroke-width: 2; }
+circle {fill: #bbb; stroke: transparent; stroke-width: 2; }
 circle:first-child {stroke: black; fill: transparent; }
 circle.active {fill: white; stroke: black; }
-path {stroke-width: 2; fill: black; stroke: black; }
-path.active {fill: white; }
+path {stroke-width: 2; fill: #bbb; stroke: #bbb; }
+path.active {fill: white; stroke: black;}
 
 p svg {
     float: right;
