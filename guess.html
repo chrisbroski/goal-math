@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-<title>Standard Normal Graph</title>
+<title>Find Value</title>
 <style>
 /*! simple.css | MIT License | github.com/chrisbroski/simple-css/ */
 * {box-sizing: border-box; }
@@ -26,96 +26,116 @@ canvas {background: #ddd; }
 
 <body>
 <article>
-<h1>Standard Normal Graph</h1>
+<h1>Find Value</h1>
 
 <p><canvas id="graph" width="240" height="140"></canvas>
+<p><button id="new">New</button> <button>show</button> <span id="y"></span>
+<p>Turn: <span id="turn"></span>
+<p>Total: <span id="total"></span>
 </article>
 
 <script>
 
-var sqrt2pi = Math.sqrt(2 * Math.PI);
-var standardBase = Math.E / sqrt2pi;
+var sqrtOfOneDiv2Pi = Math.sqrt(1 / (2 * Math.PI));
+var pattern = [{m: 100, s: 2, a: 1}];
+var turn = 0;
+var total = 0;
+var canvas;
+var ctx;
+var precision = 3;
+var sensitivity = 0.00000001;
 
-function drawGraph(ctx) {
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
-    ctx.font = '12px sans-serif';
-
+function drawGraph() {
+    ctx.beginPath();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.moveTo(20, 120);
     ctx.moveTo(20.5, 20.5);
     ctx.lineTo(20.5, 120.5);
     ctx.lineTo(220.5, 120.5);
-
     ctx.stroke();
 }
 
-function normal(x, mean, stddev) {
-    // https://en.wikipedia.org/wiki/Normal_distribution#Definition
-    // https://en.wikipedia.org/wiki/Probability_density_function
-    var exponent = -1 * ((x - mean) * (x - mean)) / (2 * stddev * stddev);
-    var base = Math.E / (stddev * stddev * sqrt2pi);
-    console.log(x, Math.pow(base, exponent));
-    return Math.pow(base, exponent);
-}
-
-function stdNormal(x) {
-    // console.log(x, Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2));
-    // return Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2);
-    var y = Math.exp(x * x * -1 / 2) / sqrt2pi;
-    console.log(x, y);
-    return y;
-}
-
-function normalFam(x, m, s) {
-    // console.log(x, Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2));
-    // return Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2);
-    var y = Math.exp(x * x * -1 / 2) / sqrt2pi;
-    console.log(x, y);
-    return y;
-}
-
+// Where did this come rom? It seems to work but I don't know why.
 function pdf(x, mean, std) {
-    var c1 = Math.sqrt(1 / (2 * Math.PI)) / std;
-    var c2 = 1 / (2 * std * std);
-    // for ( ip=0; ip<xpdf.length; ip++ ){
-    var y = c1 * Math.exp(-(x - mean) * (x - mean) * c2);
-    console.log(x, y);
+    var base = sqrtOfOneDiv2Pi / std;
+    var exp = 1 / (2 * std * std);
+    var diff = x - mean;
+    var y = base * Math.exp(-diff * diff * exp);
     return y;
-    // }
 }
 
 function dist(x, m, s, a) {
+    var y;
     m = m || 0;
     s = s || 1;
     a = a || 1;
 
-    return stdNormal(x, m, s) * a;
+    y = pdf(x, m, s) * a;
+    if (y < sensitivity) {
+        y = 0;
+    }
+    return y
 }
 
-function stdNormalDistribution (x) {
-  return Math.pow(Math.E, (x * x / -2) / Math.sqrt(2 * Math.PI));
+function display(y) {
+    if (y) {
+        document.getElementById("y").textContent = y.toPrecision(precision);
+    } else {
+        document.getElementById("y").textContent = '0';
+    }
+    document.getElementById("turn").textContent = turn;
+    document.getElementById("total").textContent = total.toPrecision(precision);
+}
+
+function drawPattern() {
+    var val, ii, len = 200;
+
+    ctx.beginPath();
+
+    for (ii = 0; ii < len; ii += 1) {
+        val = dist(ii, pattern[0].m, pattern[0].s, pattern[0].a);
+        ctx.lineTo(20 + ii, 120.5 - val * 100);
+    }
+    ctx.stroke();
+}
+
+function rndPatt() {
+    params = {};
+    params.m = Math.random() * 200;
+    params.s = Math.random() * 8 + 0.5;
+    params.a = 2 * Math.random() + 0.5;
+    console.log(params);
+    return params;
 }
 
 function init() {
-    var canvas = document.getElementById("graph"),
-        ctx = canvas.getContext("2d"),
-        val;
+    canvas = document.getElementById("graph");
+    ctx = canvas.getContext("2d");
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'black';
     ctx.font = '12px sans-serif';
-    ctx.moveTo(20, 120);
 
-    drawGraph(ctx);
-    var ii, len = 50;
-    for (ii = -50; ii < len; ii += 1) {
-        val = dist(ii, 0, 2, 2);
-        if (val > 0.00005) {
-            ctx.lineTo(120 + ii * 2, 120.5 - val * 100);
-        } else {
-            ctx.moveTo(120 + ii * 2, 120.5);
-        }
-    }
-    ctx.stroke();
+    drawGraph();
+    drawPattern();
+
+    canvas.addEventListener("click", function (e) {
+        var x = e.pageX - this.offsetLeft - 20;
+        var y = dist(x, pattern[0].m, pattern[0].s, pattern[0].a);
+        console.log(e.pageX - this.offsetLeft);
+        turn += 1;
+        total += y;
+        display(y);
+    });
+    document.getElementById("new").addEventListener("click", function () {
+        turn = 0;
+        total = 0;
+        pattern.length = 0;
+        pattern.push(rndPatt());
+        display();
+        drawGraph()
+        drawPattern();
+    });
 }
 
 init();
