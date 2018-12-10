@@ -8,19 +8,10 @@
 html {padding: 10px 10px 200px; font-family: droid sans, sans-serif; }
 body {margin: 0 auto; max-width: 580px; }
 article > *:first-child {margin-top: 0; }
-li {font-size: 16px; margin-bottom: 0.3em; line-height: 1.4em; }
 h1 {font-size: 36px; }
-h2 {font-size: 28px; padding-bottom: 0.2em; border-bottom: 1px solid #bbb; }
-h3 {font-size: 24px; }
-h4 {font-size: 20px; padding: 0.2em; background: #eee; }
 p, h5 {font-size: 17px; line-height: 1.4em; }
-pre {padding: 1em; background: #eee; overflow: auto; }
-blockquote {margin: 16px 0; padding: 0 15px; color: #777; border-left: 4px solid #ddd; }
-table {border-collapse: collapse; }
-table td {border: 1px solid #ddd; padding: 6px 13px; }
 
 span {background: #ddd; margin: 0 1em; padding: 0 1em; }
-
 canvas {background: #ddd; }
 </style>
 
@@ -37,7 +28,8 @@ canvas {background: #ddd; }
 <script>
 
 var sqrtOfOneDiv2Pi = Math.sqrt(1 / (2 * Math.PI));
-var pattern = [{m: 100, s: 2, a: 1}];
+var mean = 100;
+var std = 2;
 var turn = 0;
 var total = 0;
 var canvas;
@@ -45,17 +37,17 @@ var ctx;
 var precision = 3;
 var sensitivity = 0.00000001;
 
-function drawGraph() {
+function drawRule() {
     ctx.beginPath();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.moveTo(20, 120);
+    ctx.moveTo(10.5, 120.5);
+    ctx.lineTo(230.5, 120.5);
     ctx.moveTo(20.5, 20.5);
-    ctx.lineTo(20.5, 120.5);
-    ctx.lineTo(220.5, 120.5);
+    ctx.lineTo(20.5, 130.5);
     ctx.stroke();
 }
 
-// Where did this come rom? It seems to work but I don't know why.
+// Where did this come from? It seems to work but I don't know why.
 function pdf(x, mean, std) {
     var base = sqrtOfOneDiv2Pi / std;
     var exp = 1 / (2 * std * std);
@@ -64,13 +56,9 @@ function pdf(x, mean, std) {
     return y;
 }
 
-function dist(x, m, s, a) {
+function dist(x) {
     var y;
-    m = m || 0;
-    s = s || 1;
-    a = a || 1;
-
-    y = pdf(x, m, s) * a;
+    y = pdf(x, mean, std) * std * 2;
     if (y < sensitivity) {
         y = 0;
     }
@@ -78,34 +66,39 @@ function dist(x, m, s, a) {
 }
 
 function display(y) {
-    if (y) {
-        document.getElementById("y").textContent = y.toPrecision(precision);
-    } else {
-        document.getElementById("y").textContent = '0';
-    }
+    y = y || 0;
+    document.getElementById("y").textContent = y.toPrecision(precision);
     document.getElementById("turn").textContent = turn;
     document.getElementById("total").textContent = total.toPrecision(precision);
 }
 
-function drawPattern() {
+function drawGraph() {
     var val, ii, len = 200;
 
     ctx.beginPath();
-
     for (ii = 0; ii < len; ii += 1) {
-        val = dist(ii, pattern[0].m, pattern[0].s, pattern[0].a);
+        val = dist(ii, mean, std);
         ctx.lineTo(20 + ii, 120.5 - val * 100);
     }
     ctx.stroke();
 }
 
-function rndPatt() {
-    params = {};
-    params.m = Math.random() * 200;
-    params.s = Math.random() * 8 + 0.5;
-    params.a = 2 * Math.random() + 0.5;
-    console.log(params);
-    return params;
+function newPeak() {
+    turn = 0;
+    total = 0;
+    mean = Math.random() * 200;
+    std = Math.random() * 16 + 0.5;
+    display();
+    drawRule()
+    drawGraph();
+}
+
+function tryOne(e) {
+    var x = e.pageX - this.offsetLeft - 20;
+    var y = dist(x, mean, std);
+    turn += 1;
+    total += y;
+    display(y);
 }
 
 function init() {
@@ -116,27 +109,17 @@ function init() {
     ctx.strokeStyle = 'black';
     ctx.font = '12px sans-serif';
 
+    newPeak();
     drawGraph();
-    drawPattern();
 
-    canvas.addEventListener("click", function (e) {
-        var x = e.pageX - this.offsetLeft - 20;
-        var y = dist(x, pattern[0].m, pattern[0].s, pattern[0].a);
-        console.log(e.pageX - this.offsetLeft);
-        turn += 1;
-        total += y;
-        display(y);
-    });
-    document.getElementById("new").addEventListener("click", function () {
-        turn = 0;
-        total = 0;
-        pattern.length = 0;
-        pattern.push(rndPatt());
-        display();
-        drawGraph()
-        drawPattern();
-    });
+    canvas.addEventListener("click", tryOne);
+    document.getElementById("new").addEventListener("click", newPeak);
 }
 
 init();
+/*
+1. Search behavior
+2. Once found, find optimal
+3. At some point, expand outside solution space
+*/
 </script>
