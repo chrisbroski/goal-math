@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<title>Standard Normal Graph</title>
+<style>
+/*! simple.css | MIT License | github.com/chrisbroski/simple-css/ */
+* {box-sizing: border-box; }
+html {padding: 10px 10px 200px; font-family: droid sans, sans-serif; }
+body {margin: 0 auto; max-width: 580px; }
+article > *:first-child {margin-top: 0; }
+li {font-size: 16px; margin-bottom: 0.3em; line-height: 1.4em; }
+h1 {font-size: 36px; }
+h2 {font-size: 28px; padding-bottom: 0.2em; border-bottom: 1px solid #bbb; }
+h3 {font-size: 24px; }
+h4 {font-size: 20px; padding: 0.2em; background: #eee; }
+p, h5 {font-size: 17px; line-height: 1.4em; }
+pre {padding: 1em; background: #eee; overflow: auto; }
+blockquote {margin: 16px 0; padding: 0 15px; color: #777; border-left: 4px solid #ddd; }
+table {border-collapse: collapse; }
+table td {border: 1px solid #ddd; padding: 6px 13px; }
+
+span {background: #ddd; margin: 0 1em; padding: 0 1em; }
+
+canvas {background: #ddd; }
+</style>
+
+<body>
+<article>
+<h1>Standard Normal Graph</h1>
+
+<p><canvas id="graph" width="240" height="140"></canvas>
+</article>
+
+<script>
+
+var sqrt2pi = Math.sqrt(2 * Math.PI);
+var standardBase = Math.E / sqrt2pi;
+
+function drawGraph(ctx) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.font = '12px sans-serif';
+
+    ctx.moveTo(20.5, 20.5);
+    ctx.lineTo(20.5, 120.5);
+    ctx.lineTo(220.5, 120.5);
+
+    ctx.stroke();
+}
+
+function normal(x, mean, stddev) {
+    // https://en.wikipedia.org/wiki/Normal_distribution#Definition
+    // https://en.wikipedia.org/wiki/Probability_density_function
+    var exponent = -1 * ((x - mean) * (x - mean)) / (2 * stddev * stddev);
+    var base = Math.E / (stddev * stddev * sqrt2pi);
+    console.log(x, Math.pow(base, exponent));
+    return Math.pow(base, exponent);
+}
+
+function stdNormal(x) {
+    // console.log(x, Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2));
+    // return Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2);
+    var y = Math.exp(x * x * -1 / 2) / sqrt2pi;
+    console.log(x, y);
+    return y;
+}
+
+function normalFam(x, m, s) {
+    // console.log(x, Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2));
+    // return Math.pow(1 / Math.sqrt(2 * Math.PI), x * x / -2);
+    var y = Math.exp(x * x * -1 / 2) / sqrt2pi;
+    console.log(x, y);
+    return y;
+}
+
+function pdf(x, mean, std) {
+    var c1 = Math.sqrt(1 / (2 * Math.PI)) / std;
+    var c2 = 1 / (2 * std * std);
+    // for ( ip=0; ip<xpdf.length; ip++ ){
+    var y = c1 * Math.exp(-(x - mean) * (x - mean) * c2);
+    console.log(x, y);
+    return y;
+    // }
+}
+
+function dist(x, m, s, a) {
+    m = m || 0;
+    s = s || 1;
+    a = a || 1;
+
+    return stdNormal(x, m, s) * a;
+}
+
+function stdNormalDistribution (x) {
+  return Math.pow(Math.E, (x * x / -2) / Math.sqrt(2 * Math.PI));
+}
+
+function init() {
+    var canvas = document.getElementById("graph"),
+        ctx = canvas.getContext("2d"),
+        val;
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.font = '12px sans-serif';
+    ctx.moveTo(20, 120);
+
+    drawGraph(ctx);
+    var ii, len = 50;
+    for (ii = -50; ii < len; ii += 1) {
+        val = dist(ii, 0, 2, 2);
+        if (val > 0.00005) {
+            ctx.lineTo(120 + ii * 2, 120.5 - val * 100);
+        } else {
+            ctx.moveTo(120 + ii * 2, 120.5);
+        }
+    }
+    ctx.stroke();
+}
+
+init();
+</script>
