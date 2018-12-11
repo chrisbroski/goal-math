@@ -20,7 +20,7 @@ canvas {background: #ddd; }
 <h1>Find Value</h1>
 
 <p><canvas id="graph" width="240" height="140"></canvas>
-<p><button id="new">New</button> <button>show</button> <span id="y"></span>
+<p><button id="new">New</button> <button id="show">show</button> <span id="y"></span>
 <p>Turn: <span id="turn"></span>
 <p>Total: <span id="total"></span>
 </article>
@@ -87,10 +87,9 @@ function newPeak() {
     turn = 0;
     total = 0;
     mean = Math.random() * 200;
-    std = Math.random() * 16 + 0.5;
+    std = 4;//Math.random() * 16 + 0.5;
     display();
-    drawRule()
-    drawGraph();
+    drawRule();
 }
 
 function tryOne(e) {
@@ -114,6 +113,7 @@ function init() {
 
     canvas.addEventListener("click", tryOne);
     document.getElementById("new").addEventListener("click", newPeak);
+    document.getElementById("show").addEventListener("click", drawGraph);
 }
 
 init();
