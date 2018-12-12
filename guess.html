@@ -14,6 +14,7 @@ p, h5 {font-size: 17px; line-height: 1.4em; }
 span {background: #ddd; margin: 0 1em; padding: 0 1em; }
 canvas {background: #ddd; }
 pre {
+    padding: 2px;
     width: 240px;
     overflow: auto;
     border: 1px solid;
@@ -31,12 +32,15 @@ pre {
 <p><button id="new">New</button> <button id="show">show</button> <span id="y"></span>
 <p>Turn: <span id="turn"></span>
 <p>Total: <span id="total"></span>
-<p><button onclick="multiSearchRand(1000000)">Search Random x1,000,000</button>
+<p><button onclick="multiSearch(100000, searchRand)">Search Random x100,000</button>
+<p><button onclick="multiSearch(100000, searchUniform, .005)">Search Uniform x100,000</button>
+<p><button onclick="multiSearch(100000, searchUniform, PHI)">Search Phi x100,000</button>
 </article>
 
 <script>
-
+var maxX = 200;
 var sqrtOfOneDiv2Pi = Math.sqrt(1 / (2 * Math.PI));
+var PHI = 0.61803398875;
 var mean = 100;
 var std = 2;
 var turn = 0;
@@ -83,7 +87,7 @@ function display(y) {
 }
 
 function drawGraph() {
-    var val, ii, len = 200;
+    var val, ii, len = maxX;
 
     ctx.beginPath();
     for (ii = 0; ii < len; ii += 1) {
@@ -96,7 +100,7 @@ function drawGraph() {
 function newPeak() {
     turn = 0;
     total = 0;
-    mean = Math.random() * 200;
+    mean = Math.random() * maxX;
     std = 4;//Math.random() * 16 + 0.5;
     display();
     drawRule();
@@ -110,18 +114,29 @@ function tryOne(e) {
     display(y);
 }
 
-function search() {
+function searchUniform(interval) {
+    var x = 0, y = 0, iter = 0;
+    x = 0;
+
+    while (y <= 0) {
+        iter += 1;
+        x = x + interval * maxX;
+        if (x > maxX) {
+            x = x - maxX;
+        }
+        y = dist(x);
+    }
+
+    return iter;
+}
+
+function searchRand() {
     var x, y = 0, iter = 0;
 
-    // console.log(dist(x));
-    // // new value
-    // // is guess above sensitivity?
     while (y <= 0) {
-        // guess
         iter += 1;
-        x = Math.ceil(Math.random() * 200);
+        x = Math.ceil(Math.random() * maxX);
         y = dist(x);
-        // console.log(x, y);
     }
 
     return iter;
@@ -141,29 +156,13 @@ function meanDev(a, x) {
     return total / a.length;
 }
 
-function multiSearchRand(max) {
+function multiSearch(iterations, choice, params) {
     var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
-    text = document.createTextNode("Rand search " + max + " attempts\n");
+    text = document.createTextNode("Rand search " + iterations + " attempts\n");
     out.appendChild(text);
-    for (ii = 0; ii < max; ii += 1) {
+    for (ii = 0; ii < iterations; ii += 1) {
         newPeak();
-        tries = search();
-        history.push(tries);
-    }
-    ave = aveMean(history);
-    text = document.createTextNode("    Mean: " + ave.toPrecision(3) + "\n");
-    out.appendChild(text);
-    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(3) + "\n");
-    out.appendChild(text);
-}
-
-function multiSearchUniform(max) {
-    var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
-    text = document.createTextNode("Uniform search " + max + " attempts\n");
-    out.appendChild(text);
-    for (ii = 0; ii < max; ii += 1) {
-        newPeak();
-        tries = search();
+        tries = choice(params);
         history.push(tries);
     }
     ave = aveMean(history);
@@ -187,7 +186,6 @@ function init() {
     canvas.addEventListener("click", tryOne);
     document.getElementById("new").addEventListener("click", newPeak);
     document.getElementById("show").addEventListener("click", drawGraph);
-    document.getElementById("searchRand").addEventListener("click", search);
 }
 
 init();
