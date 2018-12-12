@@ -69,6 +69,11 @@ function pdf(x, mean, std) {
     var y = base * Math.exp(-diff * diff * exp);
     return y;
 }
+function pdfStigler(x, mean) {
+    y = Math.exp(x * x * Math.PI * -1);
+    console.log(x, y);
+    return y;
+}
 
 function dist(x) {
     var y;
