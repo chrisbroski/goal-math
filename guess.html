@@ -14,8 +14,9 @@ p, h5 {font-size: 17px; line-height: 1.4em; }
 span {background: #ddd; margin: 0 1em; padding: 0 1em; }
 canvas {background: #ddd; }
 pre {
+    margin: 0;
     padding: 2px;
-    width: 240px;
+    width: 320px;
     overflow: auto;
     border: 1px solid;
     position: absolute;
@@ -31,10 +32,12 @@ pre {
 <p><canvas id="graph" width="240" height="140"></canvas>
 <p><button id="new">New</button> <button id="show">show</button> <span id="y"></span>
 <p>Turn: <span id="turn"></span>
-<p>Total: <span id="total"></span>
 <p><button onclick="multiSearch(100000, searchRand)">Search Random x100,000</button>
 <p><button onclick="multiSearch(100000, searchUniform, .005)">Search Uniform x100,000</button>
 <p><button onclick="multiSearch(100000, searchUniform, PHI)">Search Phi x100,000</button>
+<p><button onclick="multiSearch(10, searchRand, null, 0.1)">Search Optimal Random x10</button>
+<p><button onclick="multiSearch(10, searchUniform, .005, 0.7)">Search Optimal .5% x10</button>
+<p><button onclick="multiSearch(100000, searchUniform, PHI, 0.7878896)">Search Optimal Phi x100,000</button>
 </article>
 
 <script>
@@ -44,12 +47,12 @@ var PHI = 0.61803398875;
 var mean = 100;
 var std = 2;
 var turn = 0;
-var total = 0;
 var canvas;
 var ctx;
 var precision = 3;
 var sensitivity = 0.00000001;
-var success = 0.78;
+// var success = 0.7878896; // max - 1%
+var boundaries = {left: 0, right: 200, potential: [], best: [0, 0]};
 
 function drawRule() {
     ctx.beginPath();
@@ -61,7 +64,7 @@ function drawRule() {
     ctx.stroke();
 }
 
-// Where did this come from? It seems to work but I don't know why.
+// Where did I find this? It seems to work but I don't know why.
 function pdf(x, mean, std) {
     var base = sqrtOfOneDiv2Pi / std;
     var exp = 1 / (2 * std * std);
@@ -69,6 +72,7 @@ function pdf(x, mean, std) {
     var y = base * Math.exp(-diff * diff * exp);
     return y;
 }
+// I like the simplicity of this but it is inconsistent with a lot of statistical norms
 function pdfStigler(x, mean) {
     y = Math.exp(x * x * Math.PI * -1);
     console.log(x, y);
@@ -76,19 +80,13 @@ function pdfStigler(x, mean) {
 }
 
 function dist(x) {
-    var y;
-    y = pdf(x, mean, std) * std * 2;
-    if (y < sensitivity) {
-        y = 0;
-    }
-    return y
+    return pdf(x, mean, std) * std * 2;
 }
 
 function display(y) {
     y = y || 0;
     document.getElementById("y").textContent = y.toPrecision(precision);
     document.getElementById("turn").textContent = turn;
-    document.getElementById("total").textContent = total.toPrecision(precision);
 }
 
 function drawGraph() {
@@ -96,7 +94,7 @@ function drawGraph() {
 
     ctx.beginPath();
     for (ii = 0; ii < len; ii += 1) {
-        val = dist(ii, mean, std);
+        val = dist(ii);
         ctx.lineTo(20 + ii, 120.5 - val * 100);
     }
     ctx.stroke();
@@ -104,7 +102,6 @@ function drawGraph() {
 
 function newPeak() {
     turn = 0;
-    total = 0;
     mean = Math.random() * maxX;
     std = 4;//Math.random() * 16 + 0.5;
     display();
@@ -112,36 +109,104 @@ function newPeak() {
 }
 
 function tryOne(e) {
-    var x = e.pageX - this.offsetLeft - 20;
-    var y = dist(x, mean, std);
+    var rect = e.target.getBoundingClientRect();
+    var x = e.clientX - rect.left - 20;
+    // var x = e.pageX - this.offsetLeft - 20;
+    var y = dist(x);
     turn += 1;
-    total += y;
     display(y);
 }
 
-function searchUniform(interval) {
-    var x = 0, y = 0, iter = 0;
-    x = 0;
+function clearBoundaries() {
+    boundaries.left = 0;
+    boundaries.right = 200;
+    boundaries.potential.length = 0;
+    boundaries.best[0] = 0;
+    boundaries.best[1] = 0;
+}
 
-    while (y <= 0) {
-        iter += 1;
-        x = x + interval * maxX;
-        if (x > maxX) {
-            x = x - maxX;
+function findNext(previous, interval) {
+    var range = boundaries.right - boundaries.left;
+    var x = previous + interval * range;
+
+    if (x > boundaries.right) {
+        x = x - range;
+    }
+    return x;
+}
+
+function updateSearchSpace(x, y) {
+    // normalize sensitivity threshold to zero
+    if (y < sensitivity) {
+        y = 0;
+    }
+    // record this attempt
+    boundaries.potential.push([x, y]);
+
+    if (y === 0 && boundaries.best[1] === 0) {
+        // if there is no best yet, then just move on
+        // console.log("y=0 and no best yet");
+        return;
+    }
+
+    if (y > boundaries.best[1]) {
+        boundaries.best[0] = x;
+        boundaries.best[1] = y;
+        // console.log("record best [" + x + ", " + y + "]");
+    }
+
+    if (boundaries.potential.length < 2) {
+        // We'll need at least 2 points
+        // console.log("1 attempt is not enough to modify search space");
+        return;
+    }
+
+    // sort by x
+    boundaries.potential.sort(function (a, b) {
+        return a[0] - b[0];
+    });
+    // console.log(JSON.parse(JSON.stringify(boundaries)));
+
+    // left should become the potential one less than max
+    // right is the potential one greater
+    boundaries.potential.forEach(function (attempt, index, potentials) {
+        // console.log(attempt, index);
+        if (attempt[0] === boundaries.best[0]) {
+            // console.log(attempt[0] + " is best")
+            if (index > 0) {
+                boundaries.left = potentials[index - 1][0];
+            }
+            if (index < potentials.length - 1) {
+                boundaries.right = potentials[index + 1][0];
+            }
         }
+    });
+}
+
+function searchUniform(interval, success) {
+    var x = 0, y = 0, iter = 0;
+    clearBoundaries();
+
+    while (y <= success) {
+        iter += 1;
+        x = findNext(x, interval);
         y = dist(x);
+        updateSearchSpace(x, y);
     }
 
     return iter;
 }
 
-function searchRand() {
-    var x, y = 0, iter = 0;
+function searchRand(interval, success) {
+    var x, y = 0, iter = 0, range;
+    clearBoundaries();
+    range = boundaries.right - boundaries.left;
 
-    while (y <= 0) {
+    while (y <= success) {
         iter += 1;
-        x = Math.ceil(Math.random() * maxX);
+        x = Math.ceil(Math.random() * range + boundaries.left);
         y = dist(x);
+        updateSearchSpace(x, y);
     }
 
     return iter;
@@ -161,19 +226,20 @@ function meanDev(a, x) {
     return total / a.length;
 }
 
-function multiSearch(iterations, choice, params) {
+function multiSearch(iterations, choice, param, success) {
     var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
-    text = document.createTextNode("Rand search " + iterations + " attempts\n");
+    success = success || sensitivity;
+    text = document.createTextNode("Search " + choice.name + " " + iterations + " attempts\n");
     out.appendChild(text);
     for (ii = 0; ii < iterations; ii += 1) {
         newPeak();
-        tries = choice(params);
+        tries = choice(param, success);
         history.push(tries);
     }
     ave = aveMean(history);
-    text = document.createTextNode("    Mean: " + ave.toPrecision(3) + "\n");
+    text = document.createTextNode("    Mean: " + ave.toPrecision(precision) + "\n");
     out.appendChild(text);
-    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(3) + "\n");
+    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(precision) + "\n");
     out.appendChild(text);
 }
 
