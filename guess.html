@@ -22,6 +22,9 @@ pre {
     position: absolute;
     left: 280px;
 }
+input {
+    width: 80px;
+}
 </style>
 
 <body>
@@ -30,22 +33,24 @@ pre {
 
 <pre></pre>
 <p><canvas id="graph" width="240" height="140"></canvas>
-<p><label>Sensitivity: <input type="number" value="1e-8"></label>
+<p><label>Sensitivity: <input id="sensitivity" type="number" value="1e-6"></label>
+<p><label>Precision: <input id="precision" type="number" value="3" min="1" max="7"></label>
+<p><label>Deviation: <input id="deviation" type="number" value="4" min="0.1" max="20"></label>
 <p>
-    <button onclick="singleSearch(searchRand)">Search Random &gt; sensitivity</button>
+    <button onclick="singleSearch(searchRand)">Random &gt; sensitivity</button>
     <button onclick="multiSearch(100000, searchRand)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, .01)">Search Uniform 1%  &gt; sensitivity</button>
+    <button onclick="singleSearch(searchUniform, .01)">Uniform 1%  &gt; sensitivity</button>
     <button onclick="multiSearch(100000, searchUniform, .01)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, PHI)">Search Uniform 61.8%  &gt; sensitivity</button>
+    <button onclick="singleSearch(searchUniform, PHI)">Uniform 61.8%  &gt; sensitivity</button>
     <button onclick="multiSearch(100000, searchUniform, PHI)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchRand, null, 0.788)">Search Random &gt; 0.788</button>
-    <button onclick="multiSearch(100000, searchRand, null, 0.788)">x100,000</button>
+    <button onclick="singleSearch(searchRand, null, onePercentOfOptimal)">Random &gt; max - 1%</button>
+    <button onclick="multiSearch(100000, searchRand, null, onePercentOfOptimal)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, PHI, 0.788)">Search Uniform 61.8%  &gt; 0.788</button>
-    <button onclick="multiSearch(100000, searchUniform, PHI, 0.788)">x100,000</button>
+    <button onclick="singleSearch(searchUniform, PHI, onePercentOfOptimal)">Uniform 61.8%  &gt; max - 1%</button>
+    <button onclick="multiSearch(100000, searchUniform, PHI, onePercentOfOptimal)">x100,000</button>
 </article>
 
 <script>
@@ -53,13 +58,13 @@ var maxX = 200;
 var sqrtOfOneDiv2Pi = Math.sqrt(1 / (2 * Math.PI));
 var PHI = 0.61803398875;
 var mean = 100;
-var std = 2;
+var precision = 3;
+var sensitivity = 0.000001;
+var std = 4;
 var turn = 0;
 var canvas;
 var ctx;
-var precision = 3;
-var sensitivity = 0.00000001;
-// var success = 0.7878896; // max - 1%
+var onePercentOfOptimal = 0.7878896; // max - 1%
 var boundaries = {left: 0, right: 200, potential: [], best: [0, 0]};
 
 function drawRule() {
@@ -105,18 +110,21 @@ function drawGraph() {
 function newPeak() {
     turn = 0;
     mean = Math.random() * maxX;
-    std = 4;//Math.random() * 16 + 0.5;
-    // display();
-    drawRule();
 }
 
 function tryOne(e) {
+    var out = document.querySelector("pre"), text;
     var rect = e.target.getBoundingClientRect();
     var x = e.clientX - rect.left - 20;
-    // var x = e.pageX - this.offsetLeft - 20;
     var y = dist(x);
     turn += 1;
-    // display(y);
+    if (y < sensitivity) {
+        y = 0;
+    } else {
+        y = y.toPrecision(precision);
+    }
+    text = document.createTextNode("Selected: " + x + "; val: " + y + "; attempt: " + turn + "\n");
+    out.appendChild(text);
 }
 
 function clearBoundaries() {
@@ -142,28 +150,22 @@ function updateSearchSpace(x, y) {
     if (y < sensitivity) {
         y = 0;
     }
+
     // record this attempt
-    // if (boundaries.potential.some(function (attempt) {
-    //     return attempt[0] === x;
-    // })) {
-        boundaries.potential.push([x, y]);
-    // }
+    boundaries.potential.push([x, y, boundaries.potential.length]);
 
     if (y === 0 && boundaries.best[1] === 0) {
         // if there is no best yet, then just move on
-        // console.log("y=0 and no best yet");
         return;
     }
 
     if (y > boundaries.best[1]) {
         boundaries.best[0] = x;
         boundaries.best[1] = y;
-        // console.log("record best [" + x + ", " + y + "]");
     }
 
     if (boundaries.potential.length < 2) {
         // We'll need at least 2 points
-        // console.log("1 attempt is not enough to modify search space");
         return;
     }
 
@@ -175,9 +177,7 @@ function updateSearchSpace(x, y) {
     // left should become the potential one less than max
     // right is the potential one greater
     boundaries.potential.forEach(function (attempt, index, potentials) {
-        // console.log(attempt, index);
         if (attempt[0] === boundaries.best[0]) {
-            // console.log(attempt[0] + " is best")
             if (index > 0) {
                 boundaries.left = potentials[index - 1][0];
             }
@@ -192,25 +192,12 @@ function searchUniform(interval, success, display) {
     var x, y = 0, iter = 0;
     x = Math.random() * boundaries.right;
     clearBoundaries();
-    if (display) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawRule();
-        drawGraph();
-    }
 
     while (y <= success) {
         iter += 1;
         x = findNext(x, interval);
-
-        if (display) {
-            ctx.beginPath();
-            ctx.moveTo(x + 20.5, 120.5);
-            ctx.lineTo(x + 20.5, 20.5);
-            ctx.stroke();
-        }
-
         y = dist(x);
-        updateSearchSpace(x, y, display);
+        updateSearchSpace(x, y);
     }
 
     return iter;
@@ -219,26 +206,13 @@ function searchUniform(interval, success, display) {
 function searchRand(interval, success, display) {
     var x, y = 0, iter = 0, range;
     clearBoundaries();
-    if (display) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawRule();
-        drawGraph();
-    }
 
     while (y <= success) {
         iter += 1;
         range = boundaries.right - boundaries.left;
         x = Math.random() * range + boundaries.left;
-
-        if (display) {
-            ctx.beginPath();
-            ctx.moveTo(x + 20.5, 120.5);
-            ctx.lineTo(x + 20.5, 20.5);
-            ctx.stroke();
-        }
-
         y = dist(x);
-        updateSearchSpace(x, y, display);
+        updateSearchSpace(x, y);
     }
 
     return iter;
@@ -258,22 +232,78 @@ function meanDev(a, x) {
     return total / a.length;
 }
 
+function drawGuess(guess) {
+    ctx.beginPath();
+    ctx.moveTo(guess[0] + 20.5, 120.5);
+    ctx.lineTo(guess[0] + 20.5, 20.5);
+    ctx.stroke();
+}
+
+function drawExcludedRange(start, width) {
+    ctx.beginPath();
+    ctx.fillRect(start, 20, width, 100);
+    ctx.stroke();
+}
+
+function showGuess(guesses) {
+    var guess = guesses.shift()
+    var left = boundaries.left;
+    var right = boundaries.right;
+
+    drawGuess(guess);
+
+    if (guesses.length) {
+        updateSearchSpace(guess[0], guess[1]);
+        window.setTimeout(function () {
+            showGuess(guesses)
+        }, 500);
+    }
+
+    if (boundaries.left !== left) {
+        drawExcludedRange(left + 20, boundaries.left - left)
+    }
+    if (boundaries.right !== right) {
+        drawExcludedRange(boundaries.right + 20, right - boundaries.right)
+    }
+}
+
+function replay() {
+    var guesses = boundaries.potential.slice();
+    clearBoundaries();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawRule();
+    drawGraph();
+
+    guesses.sort(function (a, b) {
+        return a[2] - b[2];
+    });
+
+    showGuess(guesses);
+}
+
+function getInputValues() {
+    sensitivity = parseFloat(document.querySelector("#sensitivity").value);
+    precision = parseInt(document.querySelector("#precision").value);
+    std = parseFloat(document.querySelector("#deviation").value);
+}
+
 function singleSearch(choice, param, success) {
     var tries, out = document.querySelector("pre"), text;
+    getInputValues()
     newPeak();
     success = success || sensitivity;
-    text = document.createTextNode("Search " + choice.name + "\n");
+    text = document.createTextNode(choice.name + " > " + success.toPrecision(precision) + "\n");
     out.appendChild(text);
-    tries = choice(param, success, true);
-    // ave = aveMean(history);
+    tries = choice(param, success, false);
     text = document.createTextNode("    Tries: " + tries + "\n");
     out.appendChild(text);
-    // text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(precision) + "\n");
-    // out.appendChild(text);
+    replay();
 }
 
 function multiSearch(iterations, choice, param, success) {
     var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
+    getInputValues()
     success = success || sensitivity;
     text = document.createTextNode("Search " + choice.name + " " + iterations + " attempts\n");
     out.appendChild(text);
@@ -296,19 +326,12 @@ function init() {
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'black';
     ctx.font = '12px sans-serif';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
 
-    newPeak();
-    drawGraph();
-
+    drawRule();
     canvas.addEventListener("click", tryOne);
-    document.getElementById("new").addEventListener("click", newPeak);
-    document.getElementById("show").addEventListener("click", drawGraph);
 }
 
 init();
-/*
-1. Search behavior
-2. Once found, find optimal
-3. At some point, expand outside solution space
-*/
+
 </script>
