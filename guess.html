@@ -30,16 +30,22 @@ pre {
 
 <pre></pre>
 <p><canvas id="graph" width="240" height="140"></canvas>
-<p><button id="new">New</button> <button id="show">show</button> <span id="y"></span>
-<p>Turn: <span id="turn"></span>
+<p><label>Sensitivity: <input type="number" value="0.00000001"></label>
 <p>
-    <button onclick="singleSearch(searchRand)">Search Random &gt; 0.00000001</button>
+    <button onclick="singleSearch(searchRand)">Search Random &gt; sensitivity</button>
     <button onclick="multiSearch(100000, searchRand)">x100,000</button>
-<p><button onclick="multiSearch(100000, searchUniform, .005)">Search Uniform x100,000</button>
-<p><button onclick="multiSearch(100000, searchUniform, PHI)">Search Phi x100,000</button>
-<p><button onclick="multiSearch(100000, searchRand, null, 0.7878896)">Search Optimal Random x100,000</button>
-<!-- <p><button onclick="multiSearch(10, searchUniform, .005, 0.7)">Search Optimal .5% x10 &gt; 0.7</button> -->
-<p><button onclick="multiSearch(100000, searchUniform, PHI, 0.7878896)">Search Optimal Phi x100,000</button>
+<p>
+    <button onclick="singleSearch(searchUniform, .01)">Search Uniform 1%  &gt; sensitivity</button>
+    <button onclick="multiSearch(100000, searchUniform, .01)">x100,000</button>
+<p>
+    <button onclick="singleSearch(searchUniform, PHI)">Search Uniform 61.8%  &gt; sensitivity</button>
+    <button onclick="multiSearch(100000, searchUniform, PHI)">x100,000</button>
+<p>
+    <button onclick="singleSearch(searchRand, null, 0.788)">Search Random &gt; 0.788</button>
+    <button onclick="multiSearch(100000, searchRand, null, 0.788)">x100,000</button>
+<p>
+    <button onclick="singleSearch(searchUniform, PHI, 0.788)">Search Uniform 61.8%  &gt; 0.788</button>
+    <button onclick="multiSearch(100000, searchUniform, PHI, 0.788)">x100,000</button>
 </article>
 
 <script>
@@ -85,12 +91,6 @@ function dist(x) {
     return pdf(x, mean, std) * std * 2;
 }
 
-function display(y) {
-    y = y || 0;
-    document.getElementById("y").textContent = y.toPrecision(precision);
-    document.getElementById("turn").textContent = turn;
-}
-
 function drawGraph() {
     var val, ii, len = maxX;
 
@@ -106,7 +106,7 @@ function newPeak() {
     turn = 0;
     mean = Math.random() * maxX;
     std = 4;//Math.random() * 16 + 0.5;
-    display();
+    // display();
     drawRule();
 }
 
@@ -116,7 +116,7 @@ function tryOne(e) {
     // var x = e.pageX - this.offsetLeft - 20;
     var y = dist(x);
     turn += 1;
-    display(y);
+    // display(y);
 }
 
 function clearBoundaries() {
@@ -171,11 +171,6 @@ function updateSearchSpace(x, y) {
     boundaries.potential.sort(function (a, b) {
         return a[0] - b[0];
     });
-    // de-duplicate
-    // boundaries.potential = boundaries.potential.filter(function (item, index, array) {
-    //     return !index || item != array[index - 1];
-    // });
-    // console.log(JSON.parse(JSON.stringify(boundaries)));
 
     // left should become the potential one less than max
     // right is the potential one greater
@@ -193,34 +188,57 @@ function updateSearchSpace(x, y) {
     });
 }
 
-function searchUniform(interval, success) {
+function searchUniform(interval, success, display) {
     var x, y = 0, iter = 0;
     x = Math.random() * boundaries.right;
     clearBoundaries();
+    if (display) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRule();
+        drawGraph();
+    }
 
     while (y <= success) {
         iter += 1;
         x = findNext(x, interval);
+
+        if (display) {
+            ctx.beginPath();
+            ctx.moveTo(x + 20.5, 120.5);
+            ctx.lineTo(x + 20.5, 20.5);
+            ctx.stroke();
+        }
+
         y = dist(x);
-        updateSearchSpace(x, y);
+        updateSearchSpace(x, y, display);
     }
 
     return iter;
 }
 
-function searchRand(interval, success) {
+function searchRand(interval, success, display) {
     var x, y = 0, iter = 0, range;
     clearBoundaries();
+    if (display) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRule();
+        drawGraph();
+    }
 
     while (y <= success) {
         iter += 1;
-        // console.log(boundaries.left, boundaries.right);
         range = boundaries.right - boundaries.left;
         x = Math.random() * range + boundaries.left;
-        y = dist(x);
-        // console.log(x, y);
 
-        updateSearchSpace(x, y);
+        if (display) {
+            ctx.beginPath();
+            ctx.moveTo(x + 20.5, 120.5);
+            ctx.lineTo(x + 20.5, 20.5);
+            ctx.stroke();
+        }
+
+        y = dist(x);
+        updateSearchSpace(x, y, display);
     }
 
     return iter;
@@ -242,10 +260,11 @@ function meanDev(a, x) {
 
 function singleSearch(choice, param, success) {
     var tries, out = document.querySelector("pre"), text;
+    newPeak();
     success = success || sensitivity;
     text = document.createTextNode("Search " + choice.name + "\n");
     out.appendChild(text);
-    tries = choice(param, success);
+    tries = choice(param, success, true);
     // ave = aveMean(history);
     text = document.createTextNode("    Tries: " + tries + "\n");
     out.appendChild(text);
