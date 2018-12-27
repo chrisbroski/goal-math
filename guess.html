@@ -33,6 +33,12 @@ input {
 
 <pre></pre>
 <p><canvas id="graph" width="240" height="140"></canvas>
+
+<p>
+    <button id="new">New</button>
+    <button id="show">Show</button>
+    <button id="phi">Phi</button>
+
 <p><label>Sensitivity: <input id="sensitivity" type="number" value="1e-6"></label>
 <p><label>Precision: <input id="precision" type="number" value="3" min="1" max="7"></label>
 <p><label>Deviation: <input id="deviation" type="number" value="4" min="0.1" max="20"></label>
@@ -65,7 +71,7 @@ var turn = 0;
 var canvas;
 var ctx;
 var onePercentOfOptimal = 0.7878896; // max - 1%
-var boundaries = {left: 0, right: 200, potential: [], best: [0, 0]};
+var record = {left: 0, right: 200, attempts: [], best: [0, 0]};
 
 function drawRule() {
     ctx.beginPath();
@@ -107,8 +113,31 @@ function drawGraph() {
     ctx.stroke();
 }
 
+// I wanted to discover, when using phi with only 3 digits of precision (.618)
+// would the first duplicate happen. I don't know when but it's > 190,000.
+/*
+var hist = [];
+function next(seed) {
+    var nextSeed = seed * 1.618;
+    if (nextSeed > 1) {
+        nextSeed = nextSeed - 1;
+    }
+    nextSeed = nextSeed.toPrecision(10);
+    console.log(hist.length, nextSeed);
+    if (hist.indexOf(nextSeed) > -1) {
+        console.log("dup found");
+    } else {
+        hist.push(nextSeed);
+        window.setTimeout(function () {
+            next(nextSeed);
+        }, 1);
+    }
+}
+*/
+
 function newPeak() {
     turn = 0;
+    drawRule();
     mean = Math.random() * maxX;
 }
 
@@ -125,21 +154,25 @@ function tryOne(e) {
     }
     text = document.createTextNode("Selected: " + x + "; val: " + y + "; attempt: " + turn + "\n");
     out.appendChild(text);
+    if (parseFloat(y) >= 0.77) {
+        text = document.createTextNode("    Success!\n");
+    }
+    out.appendChild(text);
 }
 
-function clearBoundaries() {
-    boundaries.left = 0;
-    boundaries.right = 200;
-    boundaries.potential.length = 0;
-    boundaries.best[0] = 0;
-    boundaries.best[1] = 0;
+function clearRecord() {
+    record.left = 0;
+    record.right = 200;
+    record.attempts.length = 0;
+    record.best[0] = 0;
+    record.best[1] = 0;
 }
 
 function findNext(previous, interval) {
-    var range = boundaries.right - boundaries.left;
+    var range = record.right - record.left;
     var x = previous + interval * range;
 
-    if (x > boundaries.right) {
+    if (x > record.right) {
         x = x - range;
     }
     return x;
@@ -152,48 +185,48 @@ function updateSearchSpace(x, y) {
     }
 
     // record this attempt
-    boundaries.potential.push([x, y, boundaries.potential.length]);
+    record.attempts.push([x, y, record.attempts.length]);
 
-    if (y === 0 && boundaries.best[1] === 0) {
+    if (y === 0 && record.best[1] === 0) {
         // if there is no best yet, then just move on
         return;
     }
 
-    if (y > boundaries.best[1]) {
-        boundaries.best[0] = x;
-        boundaries.best[1] = y;
+    if (y > record.best[1]) {
+        record.best[0] = x;
+        record.best[1] = y;
     }
 
-    if (boundaries.potential.length < 2) {
+    if (record.attempts.length < 2) {
         // We'll need at least 2 points
         return;
     }
 
     // sort by x
-    boundaries.potential.sort(function (a, b) {
+    record.attempts.sort(function (a, b) {
         return a[0] - b[0];
     });
 
-    // left should become the potential one less than max
-    // right is the potential one greater
-    boundaries.potential.forEach(function (attempt, index, potentials) {
-        if (attempt[0] === boundaries.best[0]) {
+    // left should become the attempt one less than max
+    // right is the attempt one greater
+    record.attempts.forEach(function (attempt, index, attempts) {
+        if (attempt[0] === record.best[0]) {
             if (index > 0) {
-                boundaries.left = potentials[index - 1][0];
+                record.left = attempts[index - 1][0];
             }
-            if (index < potentials.length - 1) {
-                boundaries.right = potentials[index + 1][0];
+            if (index < attempts.length - 1) {
+                record.right = attempts[index + 1][0];
             }
         }
     });
 }
 
-function searchUniform(interval, success, display) {
+function searchUniform(interval, success) {
     var x, y = 0, iter = 0;
-    x = Math.random() * boundaries.right;
-    clearBoundaries();
+    x = Math.random() * record.right;
+    clearRecord();
 
-    while (y <= success) {
+    while (y <= success && iter < 200) {
         iter += 1;
         x = findNext(x, interval);
         y = dist(x);
@@ -203,14 +236,14 @@ function searchUniform(interval, success, display) {
     return iter;
 }
 
-function searchRand(interval, success, display) {
+function searchRand(interval, success) {
     var x, y = 0, iter = 0, range;
-    clearBoundaries();
+    clearRecord();
 
     while (y <= success) {
         iter += 1;
-        range = boundaries.right - boundaries.left;
-        x = Math.random() * range + boundaries.left;
+        range = record.right - record.left;
+        x = Math.random() * range + record.left;
         y = dist(x);
         updateSearchSpace(x, y);
     }
@@ -247,8 +280,8 @@ function drawExcludedRange(start, width) {
 
 function showGuess(guesses) {
     var guess = guesses.shift()
-    var left = boundaries.left;
-    var right = boundaries.right;
+    var left = record.left;
+    var right = record.right;
 
     drawGuess(guess);
 
@@ -259,17 +292,17 @@ function showGuess(guesses) {
         }, 500);
     }
 
-    if (boundaries.left !== left) {
-        drawExcludedRange(left + 20, boundaries.left - left)
+    if (record.left !== left) {
+        drawExcludedRange(left + 20, record.left - left)
     }
-    if (boundaries.right !== right) {
-        drawExcludedRange(boundaries.right + 20, right - boundaries.right)
+    if (record.right !== right) {
+        drawExcludedRange(record.right + 20, right - record.right)
     }
 }
 
 function replay() {
-    var guesses = boundaries.potential.slice();
-    clearBoundaries();
+    var guesses = record.attempts.slice();
+    clearRecord();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawRule();
@@ -290,7 +323,7 @@ function getInputValues() {
 
 function singleSearch(choice, param, success) {
     var tries, out = document.querySelector("pre"), text;
-    getInputValues()
+    getInputValues();
     newPeak();
     success = success || sensitivity;
     text = document.createTextNode(choice.name + " > " + success.toPrecision(precision) + "\n");
@@ -303,7 +336,7 @@ function singleSearch(choice, param, success) {
 
 function multiSearch(iterations, choice, param, success) {
     var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
-    getInputValues()
+    getInputValues();
     success = success || sensitivity;
     text = document.createTextNode("Search " + choice.name + " " + iterations + " attempts\n");
     out.appendChild(text);
@@ -313,9 +346,9 @@ function multiSearch(iterations, choice, param, success) {
         history.push(tries);
     }
     ave = aveMean(history);
-    text = document.createTextNode("    Mean: " + ave.toPrecision(precision) + "\n");
+    text = document.createTextNode("    Mean: " + ave.toPrecision(4) + "\n");
     out.appendChild(text);
-    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(precision) + "\n");
+    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(4) + "\n");
     out.appendChild(text);
 }
 
@@ -329,7 +362,18 @@ function init() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
 
     drawRule();
+    getInputValues();
+    newPeak();
     canvas.addEventListener("click", tryOne);
+    document.querySelector("#new").addEventListener("click", newPeak);
+    document.querySelector("#show").addEventListener("click", drawGraph);
+    document.querySelector("#phi").addEventListener("click", function () {
+        turn = 0;
+        drawRule();
+        mean = 1000;
+        searchUniform(0.618, 1)
+        replay();
+    });
 }
 
 init();
