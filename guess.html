@@ -21,6 +21,7 @@ pre {
     border: 1px solid;
     position: absolute;
     left: 280px;
+    max-height: 500px;
 }
 input {
     width: 80px;
@@ -135,6 +136,11 @@ function next(seed) {
 }
 */
 
+function scrollOutput() {
+    var out = document.querySelector("pre");
+    out.scrollTop = out.scrollHeight;
+}
+
 function newPeak() {
     turn = 0;
     drawRule();
@@ -158,6 +164,7 @@ function tryOne(e) {
         text = document.createTextNode("    Success!\n");
     }
     out.appendChild(text);
+    scrollOutput();
 }
 
 function clearRecord() {
@@ -331,6 +338,7 @@ function singleSearch(choice, param, success) {
     tries = choice(param, success, false);
     text = document.createTextNode("    Tries: " + tries + "\n");
     out.appendChild(text);
+    scrollOutput();
     replay();
 }
 
@@ -350,6 +358,7 @@ function multiSearch(iterations, choice, param, success) {
     out.appendChild(text);
     text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(4) + "\n");
     out.appendChild(text);
+    scrollOutput();
 }
 
 function init() {
