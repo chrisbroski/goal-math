@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<title>A Logical System of Emotional Desire</title>
+
+<link rel="stylesheet" href="simple.css">
+<link rel="stylesheet" href="goal.css">
+<style>
+samp {
+    display: inline-block;
+    width: 1.5em; height: 1.5em;
+    text-align: center;
+    vertical-align: middle;
+}
+#display-action {
+    width: 5em;
+}
+#sense-smell {
+    width: 3em;
+}
+#bitey {
+    width: 240px;
+    float: right;
+}
+svg {
+    float: none;
+}
+#bitey ul {
+    margin: 0;
+    padding-left: 1em;
+}
+
+strong em {padding-right: 0.1em; }
+</style>
+
+<body>
+<article>
+<h1>Bitey: A Creature Capable of Solving Simple Problems</h1>
+
+<div id="bitey">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="48" id="body" />
+    <circle cx="30" cy="30" r="4" id="small-eye" />
+    <circle cx="70" cy="30" r="10" id="big-eye" />
+    <path d="M 35,49 C 40,92 60,92 65,49 M 50,50 L 50,75" id="tongue" />
+    <path d="M96,60 C 75,45 25,45 4,60 L 18,73 22,53 37.5,70 50,50 62.5,70 78,53 82,73 96,60" id="teeth" />
+    <line/>
+</svg>
+
+<ul>
+    <li>The little eye detects <strong><em>C</em></strong>lose resources
+    <li>The big eye detects <strong><em>F</em></strong>ar resources
+    <li>The teeth <strong><em>G</em></strong>ather resources
+    <li>The tongue <strong><em>P</em></strong>ulls far resources closer
+</ul>
+</div>
+
+<p><label>Detect smell close: <input type="number" value="1.4"></label>
+<p><label>Detect smell far: <input type="number" value="1.0"></label>
+
+<p><button>New Turn</button>
+    <samp id="turn-count"></samp>
+<p>Smell: <samp id="sense-smell"></samp>,
+<p>Close detected: <samp id="resource-c"></samp>,
+    Far detected: <samp id="resource-f"></samp>
+
+<h2>Behavior</h2>
+
+<p>My goal is to design a creature to gather as many resources as possible.
+
+<p>I call this little guy "Bitey". To have behavior, it requires a process to associate an action to sensory situations. We can implement this using a simple behavior table.
+
+<p>Action: <samp id="display-action"></samp>
+
+<table id="behaviors" class="data">
+<thead><tr><td>Situation<br>(Sensor C, F)<td>Action: Parameter
+<tbody>
+</table>
+
+<p>Clicking on the <em>New Turn</em> button will cause this table to respond with an appropriate action. Try it a few times.
+
+<p>This is a good system that works well in a rigid and predictable environment. But if we want our creation to be flexible enough to adapt its behavior to a variety of environments, it will need to be able to feel the difference between what we (its creator) choose to be good and bad outcomes, and have the ability to change its own behavior to increase good feelings and decrease bad ones.
+
+<h3>Next Page: <a href="subjective-senses">Subjective Senses</a></h3>
+
+</article>
+
+<script>
+
+var turn_count = 0,
+    current = {
+        situation: [0, 0]
+    },
+    behaviors = [
+        {"situation": "0, 0", "action": "P: 0.0"},
+        {"situation": "0, 1", "action": "P: 1.0"},
+        {"situation": "1, 0", "action": "G: 3.0"},
+        {"situation": "1, 1", "action": "G: 4.0"}
+    ];
+
+function clearTable(t) {
+    while (t.rows.length > 0) {
+        t.deleteRow(0);
+    }
+}
+
+function displayBiteySensors() {
+    document.querySelector("#small-eye").setAttribute("class", (current.situation[0]) ? "active" : "");
+    document.querySelector("#big-eye").setAttribute("class", (current.situation[1]) ? "active" : "");
+}
+
+function displayBehaviorTable(matched) {
+    var tbody = document.querySelector("#behaviors tbody"),
+        row,
+        th,
+        td;
+
+    behaviors.forEach(function (b, index) {
+        row = document.createElement("tr");
+        th = document.createElement("th");
+        td = document.createElement("td");
+
+        if (index === matched) {
+            row.className = "matched";
+        }
+        th.textContent = b.situation;
+        td.textContent = b.action;
+
+        row.appendChild(th);
+        row.appendChild(td);
+        tbody.appendChild(row);
+    });
+}
+
+function displayAction(behavior) {
+    var action = behaviors[behavior].action,
+        act = action.split(": ")[0],
+        param = action.split(": ")[1];
+
+    document.querySelector("#display-action").textContent = action;
+    clearTable(document.querySelector("#behaviors tbody"));
+    displayBehaviorTable(behavior);
+
+    // Bitey
+    document.querySelector("#teeth").setAttribute("class", (act === "G") ? "active" : "");
+    if ((act === "P" && param > 0.0) || (act === "G" && param > 3.0)) {
+        document.querySelector("#tongue").setAttribute("class", "active");
+    } else {
+        document.querySelector("#tongue").setAttribute("class", "");
+    }
+}
+
+function behave(situation) {
+    var textMatch = situation.join(", "),
+        behavior;
+
+    behaviors.forEach(function (b, index) {
+        if (b.situation === textMatch) {
+            behavior = index;
+        }
+    });
+
+    return behavior;
+}
+
+function generateSituation() {
+    var sensorSmell = Math.random() * 2.0,
+        detectorClose = 0,
+        detectorFar = 0;
+
+    // 1.4 is far detect threshold
+    if (sensorSmell > 1.4) {
+        detectorClose = 1;
+    }
+    // 1.0 is close detect threshold
+    if (sensorSmell > 1.0) {
+        detectorFar = 1;
+    }
+    document.querySelector("#sense-smell").textContent = sensorSmell.toFixed(2);
+    current.situation = [detectorClose, detectorFar];
+    document.querySelector("#resource-c").textContent = detectorClose;
+    document.querySelector("#resource-f").textContent = detectorFar;
+}
+
+function turn() {
+    turn_count += 1;
+    document.querySelector("#turn-count").textContent = turn_count;
+
+    generateSituation();
+    displayAction(behave(current.situation));
+    displayBiteySensors();
+}
+
+function init() {
+    document.querySelector("button").onclick = turn;
+    turn();
+}
+
+window.onload = init;
+
+</script>
