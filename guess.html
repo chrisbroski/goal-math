@@ -11,29 +11,49 @@ article > *:first-child {margin-top: 0; }
 h1 {font-size: 36px; }
 p, h5 {font-size: 17px; line-height: 1.4em; }
 
-span {background: #ddd; margin: 0 1em; padding: 0 1em; }
-canvas {background: #ddd; }
+span {background: #eee; margin: 0 1em; padding: 0 1em; }
+#graphs {
+    position: relative;
+    width: 240px;
+    height: 140px;
+}
+#grid {
+    background: #ddd;
+}
+#grid, #graph {
+    position: absolute;
+    top: 0; left: 0;
+}
 pre {
     margin: 0;
-    padding: 2px;
-    width: 320px;
+    padding: 4px 8px;
+    width: 340px;
     overflow: auto;
-    border: 1px solid;
+    background: black;
+    color: white;
     position: absolute;
-    left: 280px;
-    max-height: 500px;
+    left: 260px;
+    height: 300px;
 }
 input {
     width: 80px;
+}
+span.success {
+    background: transparent;
+    color: #6F6;
+    padding: 1em;
 }
 </style>
 
 <body>
 <article>
-<h1>Find Value</h1>
+<h1>Discover Optimal Value</h1>
 
 <pre></pre>
-<p><canvas id="graph" width="240" height="140"></canvas>
+<div id="graphs">
+    <canvas id="grid" width="240" height="140"></canvas>
+    <canvas id="graph" width="240" height="140"></canvas>
+</div>
 
 <p>
     <button id="new">New</button>
@@ -41,7 +61,6 @@ input {
     <button id="phi">Phi</button>
 
 <p><label>Sensitivity: <input id="sensitivity" type="number" value="1e-6"></label>
-<p><label>Precision: <input id="precision" type="number" value="3" min="1" max="7"></label>
 <p><label>Deviation: <input id="deviation" type="number" value="4" min="0.1" max="20"></label>
 <p>
     <button onclick="singleSearch(searchRand)">Random &gt; sensitivity</button>
@@ -65,7 +84,6 @@ var maxX = 200;
 var sqrtOfOneDiv2Pi = Math.sqrt(1 / (2 * Math.PI));
 var PHI = 0.61803398875;
 var mean = 100;
-var precision = 3;
 var sensitivity = 0.000001;
 var std = 4;
 var turn = 0;
@@ -75,13 +93,26 @@ var onePercentOfOptimal = 0.7878896; // max - 1%
 var record = {left: 0, right: 200, attempts: [], best: [0, 0]};
 
 function drawRule() {
-    ctx.beginPath();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.moveTo(10.5, 120.5);
-    ctx.lineTo(230.5, 120.5);
-    ctx.moveTo(20.5, 20.5);
-    ctx.lineTo(20.5, 130.5);
-    ctx.stroke();
+    var grid = document.querySelector("#grid");
+
+    gridCtx = grid.getContext("2d");
+    gridCtx.beginPath();
+    gridCtx.moveTo(17.5, 120.5);
+    gridCtx.lineTo(230.5, 120.5);
+    gridCtx.moveTo(20.5, 15.5);
+    gridCtx.lineTo(20.5, 125.5);
+    gridCtx.moveTo(17.5, 20.5);
+    gridCtx.lineTo(23.5, 20.5);
+    gridCtx.moveTo(120.5, 117.5);
+    gridCtx.lineTo(120.5, 123.5);
+    gridCtx.moveTo(220.5, 117.5);
+    gridCtx.lineTo(220.5, 123.5);
+    gridCtx.fillText('0.0', 2, 124);
+    gridCtx.fillText('1.0', 2, 24);
+    gridCtx.fillText('0', 18, 135);
+    gridCtx.fillText('100', 112, 135);
+    gridCtx.fillText('200', 212, 135);
+    gridCtx.stroke();
 }
 
 // Where did I find this? It seems to work but I don't know why.
@@ -143,31 +174,42 @@ function scrollOutput() {
 
 function newPeak() {
     turn = 0;
-    drawRule();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     mean = Math.random() * maxX;
+}
+
+function pad(str, to) {
+    str = str.toString();
+    while (str.length < to) {
+        str = " " + str;
+    }
+    return str;
 }
 
 function tryOne(e) {
     var out = document.querySelector("pre"), text;
     var rect = e.target.getBoundingClientRect();
-    var x = e.clientX - rect.left - 20;
+    var x = e.clientX - rect.left - 20.5;
     var y = dist(x);
     turn += 1;
     if (y < sensitivity) {
-        y = 0;
+        y = "0.000e+0";
     } else {
-        y = y.toPrecision(precision);
+        y = y.toExponential(3);
     }
-    text = document.createTextNode("Selected: " + x + "; val: " + y + "; attempt: " + turn + "\n");
+    text = document.createTextNode("x: " + pad(x, 3) + ", y: " + y + "; try #" + turn + "\n");
     out.appendChild(text);
     if (parseFloat(y) >= 0.77) {
-        text = document.createTextNode("    Success!\n");
+        text = document.createElement("span");
+        text.className = "success";
+        text.textContent = "Success!\n";
     }
     out.appendChild(text);
     scrollOutput();
 }
 
 function clearRecord() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     record.left = 0;
     record.right = 200;
     record.attempts.length = 0;
@@ -185,6 +227,7 @@ function findNext(previous, interval) {
     return x;
 }
 
+// If there is a duplicate guess, this fails
 function updateSearchSpace(x, y) {
     // normalize sensitivity threshold to zero
     if (y < sensitivity) {
@@ -273,10 +316,12 @@ function meanDev(a, x) {
 }
 
 function drawGuess(guess) {
+    ctx.strokeStyle = 'gray';
     ctx.beginPath();
     ctx.moveTo(guess[0] + 20.5, 120.5);
     ctx.lineTo(guess[0] + 20.5, 20.5);
     ctx.stroke();
+    ctx.strokeStyle = 'black';
 }
 
 function drawExcludedRange(start, width) {
@@ -297,6 +342,8 @@ function showGuess(guesses) {
         window.setTimeout(function () {
             showGuess(guesses)
         }, 500);
+    } else {
+        drawGraph();
     }
 
     if (record.left !== left) {
@@ -311,10 +358,6 @@ function replay() {
     var guesses = record.attempts.slice();
     clearRecord();
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawRule();
-    drawGraph();
-
     guesses.sort(function (a, b) {
         return a[2] - b[2];
     });
@@ -324,7 +367,6 @@ function replay() {
 
 function getInputValues() {
     sensitivity = parseFloat(document.querySelector("#sensitivity").value);
-    precision = parseInt(document.querySelector("#precision").value);
     std = parseFloat(document.querySelector("#deviation").value);
 }
 
@@ -333,7 +375,7 @@ function singleSearch(choice, param, success) {
     getInputValues();
     newPeak();
     success = success || sensitivity;
-    text = document.createTextNode(choice.name + " > " + success.toPrecision(precision) + "\n");
+    text = document.createTextNode(choice.name + " > " + success.toExponential(3) + "\n");
     out.appendChild(text);
     tries = choice(param, success, false);
     text = document.createTextNode("    Tries: " + tries + "\n");
@@ -378,7 +420,7 @@ function init() {
     document.querySelector("#show").addEventListener("click", drawGraph);
     document.querySelector("#phi").addEventListener("click", function () {
         turn = 0;
-        drawRule();
+        // drawRule();
         mean = 1000;
         searchUniform(0.618, 1)
         replay();
