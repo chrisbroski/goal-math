@@ -64,23 +64,26 @@ span.success {
 <p><label>Deviation: <input id="deviation" type="number" value="4" min="0.1" max="20"></label>
 
 <h3>Search</h3>
+<p>We can choose values to test inside the solution space randomly or uniformly. Making the uniform spacing 61.8% (the Golden Ratio) means that we'll always choose a value distant from the last, and never repeat.
+<p>These samplings will stop as soon as a value is discovered that exceeds sensitivity.
 <p>
-    <button onclick="singleSearch(searchRand)">Random &gt; sensitivity</button>
-    <button onclick="multiSearch(100000, searchRand)">x100,000</button>
+    <button onclick="search(1, searchRand)">Random &gt; sensitivity</button>
+    <button onclick="search(100000, searchRand)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, .01)">Uniform 1%  &gt; sensitivity</button>
-    <button onclick="multiSearch(100000, searchUniform, .01)">x100,000</button>
+    <button onclick="search(1, searchUniform, .01, successSensitivity)">Uniform 1%  &gt; sensitivity</button>
+    <button onclick="search(100000, searchUniform, .01, successSensitivity)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, PHI)">Uniform 61.8%  &gt; sensitivity</button>
-    <button onclick="multiSearch(100000, searchUniform, PHI)">x100,000</button>
+    <button onclick="search(1, searchUniform, PHI, successSensitivity)">Uniform 61.8%  &gt; sensitivity</button>
+    <button onclick="search(100000, searchUniform, PHI, successSensitivity)">x100,000</button>
 
 <h3>Search and Solution Space Refinement</h3>
+<p>After the first value is found above sensitivity, we can "prune" away areas that we know cannot contain the peak. Searching is stopped when the search space is &lt; 10% of the best value yet discovered.
 <p>
-    <button onclick="singleSearch(searchRand, null, onePercentOfOptimal)">Random &gt; max - 1%</button>
-    <button onclick="multiSearch(100000, searchRand, null, onePercentOfOptimal)">x100,000</button>
+    <button onclick="search(1, searchRand, null, successTenPercOfSpace)">Random at ±5% best</button>
+    <button onclick="search(100000, searchRand, null, successTenPercOfSpace)">x100,000</button>
 <p>
-    <button onclick="singleSearch(searchUniform, PHI, onePercentOfOptimal)">Uniform 61.8%  &gt; max - 1%</button>
-    <button onclick="multiSearch(100000, searchUniform, PHI, onePercentOfOptimal)">x100,000</button>
+    <button onclick="search(1, searchUniform, PHI, successTenPercOfSpace)">Uniform Phi at ±5% best</button>
+    <button onclick="search(100000, searchUniform, PHI, successTenPercOfSpace)">x100,000</button>
 </article>
 
 <script>
@@ -93,7 +96,6 @@ var std = 4;
 var turn = 0;
 var canvas;
 var ctx;
-var onePercentOfOptimal = 0.7878896; // max - 1%
 var record = {left: 0, right: 200, attempts: [], best: [0, 0]};
 
 function drawRule() {
@@ -216,7 +218,9 @@ function tryOne(e) {
 function clearRecord() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     record.left = 0;
+    record.leftVal = 0;
     record.right = 200;
+    record.rightVal = 0;
     record.attempts.length = 0;
     record.best[0] = 0;
     record.best[1] = 0;
@@ -268,9 +272,11 @@ function updateSearchSpace(x, y) {
         if (attempt[0] === record.best[0]) {
             if (index > 0) {
                 record.left = attempts[index - 1][0];
+                record.leftVal = attempts[index - 1][1];
             }
             if (index < attempts.length - 1) {
                 record.right = attempts[index + 1][0];
+                record.rightVal = attempts[index + 1][1];
             }
         }
     });
@@ -281,7 +287,7 @@ function searchUniform(interval, success) {
     x = Math.random() * record.right;
     clearRecord();
 
-    while (y <= success && iter < 200) {
+    while (!success(y) && iter < 200) {
         iter += 1;
         x = findNext(x, interval);
         y = dist(x);
@@ -295,7 +301,7 @@ function searchRand(interval, success) {
     var x, y = 0, iter = 0, range;
     clearRecord();
 
-    while (y <= success) {
+    while (!success(y) && iter < 200) {
         iter += 1;
         range = record.right - record.left;
         x = Math.random() * range + record.left;
@@ -375,34 +381,37 @@ function getInputValues() {
     std = parseFloat(document.querySelector("#deviation").value);
 }
 
-function singleSearch(choice, param, success) {
-    var tries, out = document.querySelector("pre"), text;
-    newPeak();
-    success = success || sensitivity;
-    text = document.createTextNode(choice.name + " > " + success.toExponential(3) + "\n");
-    out.appendChild(text);
-    tries = choice(param, success, false);
-    text = document.createTextNode("    Tries: " + tries + "\n");
-    out.appendChild(text);
-    scrollOutput();
-    replay();
+function successSensitivity(val) {
+    return val >= sensitivity;
 }
 
-function multiSearch(iterations, choice, param, success) {
+function successTenPercOfSpace() {
+    if (record.best[1] > sensitivity) {
+        return record.leftVal > record.best[1] * 0.95 && record.rightVal < record.best[1] * 1.05;
+    }
+    return false;
+}
+
+function search(iterations, choice, param, success) {
     var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
     getInputValues();
-    success = success || sensitivity;
-    text = document.createTextNode("Search " + choice.name + " " + iterations + " attempts\n");
+    success = success || successSensitivity;
+    text = document.createTextNode(choice.name + " ×" + iterations + "\n");
     out.appendChild(text);
     for (ii = 0; ii < iterations; ii += 1) {
         newPeak();
         tries = choice(param, success);
         history.push(tries);
     }
-    ave = aveMean(history);
-    text = document.createTextNode("    Mean: " + ave.toPrecision(4) + "\n");
-    out.appendChild(text);
-    text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(4) + "\n");
+    if (iterations === 1)  {
+        text = document.createTextNode("    Guesses: " + tries + ", x: " + record.best[0].toPrecision(4) + ", y: " + record.best[1].toExponential(3) + "\n");
+        replay();
+    } else {
+        ave = aveMean(history);
+        text = document.createTextNode("    Mean: " + ave.toPrecision(4) + "\n");
+        out.appendChild(text);
+        text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(4) + "\n");
+    }
     out.appendChild(text);
     scrollOutput();
 }
@@ -423,9 +432,8 @@ function init() {
     document.querySelector("#show").addEventListener("click", drawGraph);
     document.querySelector("#phi").addEventListener("click", function () {
         turn = 0;
-        // drawRule();
         mean = 1000;
-        searchUniform(0.618, 1)
+        searchUniform(0.618, successSensitivity)
         replay();
     });
 }
