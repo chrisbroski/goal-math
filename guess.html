@@ -205,12 +205,12 @@ function tryOne(e) {
     } else {
         y = y.toExponential(3);
     }
+    drawGuess([x]);
     text = document.createTextNode("x: " + pad(x, 3) + ", y: " + y + "; try #" + turn + "\n");
     out.appendChild(text);
     if (parseFloat(y) >= 0.77) {
-        text = document.createElement("span");
-        text.className = "success";
-        text.textContent = "Success!\n";
+        text = document.createTextNode("* Success! Guesses: " + turn + "\n");
+        drawGraph();
     }
     out.appendChild(text);
     scrollOutput();
@@ -343,7 +343,7 @@ function drawExcludedRange(start, width) {
 }
 
 function showGuess(guesses) {
-    var guess = guesses.shift()
+    var guess = guesses.shift();
     var left = record.left;
     var right = record.right;
 
