@@ -7,7 +7,7 @@
 /*! simple.css | MIT License | github.com/chrisbroski/simple-css/ */
 * {box-sizing: border-box; }
 html {padding: 10px 10px 200px; font-family: droid sans, sans-serif; }
-body {margin: 0 auto; max-width: 580px; position: relative; }
+body {margin: 0 auto; max-width: 640px; position: relative; }
 article > *:first-child {margin-top: 0; }
 h1 {font-size: 36px; }
 p, h5 {font-size: 17px; line-height: 1.4em; }
@@ -33,7 +33,7 @@ pre {
     background: black;
     color: white;
     position: absolute;
-    left: 260px;
+    left: 300px;
     height: 300px;
 }
 input {
@@ -43,6 +43,13 @@ span.success {
     background: transparent;
     color: #6F6;
     padding: 1em;
+}
+h3 {
+    clear: both;
+}
+fieldset {
+    width: 340px;
+    float: right;
 }
 </style>
 
@@ -65,8 +72,7 @@ span.success {
 <p><label>Deviation: <input id="deviation" type="number" value="4" min="0.1" max="20"></label>
 
 <h3>Search</h3>
-<p>We can choose values to test inside the solution space randomly or uniformly. Making the uniform spacing 61.8% (the Golden Ratio) means that we'll always choose a value distant from the last, and never repeat.
-<p>These samplings will stop as soon as a value is discovered that exceeds sensitivity.
+<fieldset>
 <p>
     <button onclick="search(1, searchRand)">Random &gt; sensitivity</button>
     <button onclick="search(100000, searchRand)">x100,000</button>
@@ -76,15 +82,20 @@ span.success {
 <p>
     <button onclick="search(1, searchUniform, PHI, successSensitivity)">Uniform 61.8%  &gt; sensitivity</button>
     <button onclick="search(100000, searchUniform, PHI, successSensitivity)">x100,000</button>
+</fieldset>
+<p>We can choose values to test inside the solution space randomly or uniformly. Making the uniform spacing 61.8% (the Golden Ratio) means that we'll always choose a value distant from the last, and never repeat.</p>
+<p>These samplings will stop as soon as a value is discovered that exceeds sensitivity.
 
 <h3>Search and Solution Space Refinement</h3>
-<p>After the first value is found above sensitivity, we can "prune" away areas that we know cannot contain the peak. Searching is stopped when the search space is &lt; 10% of the best value yet discovered.
+<fieldset>
 <p>
     <button onclick="search(1, searchRand, null, successTenPercOfSpace)">Random at ±5% best</button>
     <button onclick="search(100000, searchRand, null, successTenPercOfSpace)">x100,000</button>
 <p>
     <button onclick="search(1, searchUniform, PHI, successTenPercOfSpace)">Uniform Phi at ±5% best</button>
     <button onclick="search(100000, searchUniform, PHI, successTenPercOfSpace)">x100,000</button>
+</fieldset>
+<p>After the first value is found above sensitivity, we can "prune" away areas that we know cannot contain the peak. Searching is stopped when the search space is &lt; 10% of the best value yet discovered.</p>
 </article>
 
 <script>
@@ -353,7 +364,7 @@ function showGuess(guesses) {
         updateSearchSpace(guess[0], guess[1]);
         window.setTimeout(function () {
             showGuess(guesses)
-        }, 400);
+        }, 600);
     } else {
         drawGraph();
     }
@@ -388,6 +399,7 @@ function successSensitivity(val) {
 
 function successTenPercOfSpace() {
     if (record.best[1] > sensitivity) {
+        // console.log(record.best[1], record.leftVal, record.best[1] * 0.95, record.rightVal, record.best[1] * 1.05);
         return record.leftVal > record.best[1] * 0.95 && record.rightVal < record.best[1] * 1.05;
     }
     return false;
