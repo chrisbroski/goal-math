@@ -108,7 +108,7 @@ var std = 4;
 var turn = 0;
 var canvas;
 var ctx;
-var record = {left: 0, right: 200, attempts: [], best: [0, 0]};
+var record = {min: [0, 0], max: [200, 0], attempts: [], best: [0, 0]};
 
 function drawRule() {
     var grid = document.querySelector("#grid");
@@ -229,20 +229,18 @@ function tryOne(e) {
 
 function clearRecord() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    record.left = 0;
-    record.leftVal = 0;
-    record.right = 200;
-    record.rightVal = 0;
+    record.min = [0, 0];
+    record.max = [200, 0];
     record.attempts.length = 0;
     record.best[0] = 0;
     record.best[1] = 0;
 }
 
 function findNext(previous, interval) {
-    var range = record.right - record.left;
+    var range = record.max[0] - record.min[0];
     var x = previous + interval * range;
 
-    if (x > record.right) {
+    if (x > record.max[0]) {
         x = x - range;
     }
     return x;
@@ -283,12 +281,10 @@ function updateSearchSpace(x, y) {
     record.attempts.forEach(function (attempt, index, attempts) {
         if (attempt[0] === record.best[0]) {
             if (index > 0) {
-                record.left = attempts[index - 1][0];
-                record.leftVal = attempts[index - 1][1];
+                record.min = [attempts[index - 1][0], attempts[index - 1][1]];
             }
             if (index < attempts.length - 1) {
-                record.right = attempts[index + 1][0];
-                record.rightVal = attempts[index + 1][1];
+                record.max = [attempts[index + 1][0], attempts[index + 1][1]];
             }
         }
     });
@@ -296,7 +292,7 @@ function updateSearchSpace(x, y) {
 
 function searchUniform(interval, success) {
     var x, y = 0, iter = 0;
-    x = Math.random() * record.right;
+    x = Math.random() * record.max[0];
     clearRecord();
 
     while (!success(y) && iter < 200) {
@@ -315,8 +311,8 @@ function searchRand(interval, success) {
 
     while (!success(y) && iter < 200) {
         iter += 1;
-        range = record.right - record.left;
-        x = Math.random() * range + record.left;
+        range = record.max[0] - record.min[0];
+        x = Math.random() * range + record.min[0];
         y = dist(x);
         updateSearchSpace(x, y);
     }
@@ -355,8 +351,8 @@ function drawExcludedRange(start, width) {
 
 function showGuess(guesses) {
     var guess = guesses.shift();
-    var left = record.left;
-    var right = record.right;
+    var left = record.min[0];
+    var right = record.max[0];
 
     drawGuess(guess);
 
@@ -369,11 +365,11 @@ function showGuess(guesses) {
         drawGraph();
     }
 
-    if (record.left !== left) {
-        drawExcludedRange(left + 20, record.left - left)
+    if (record.min[0] !== left) {
+        drawExcludedRange(left + 20, record.min[0] - left)
     }
-    if (record.right !== right) {
-        drawExcludedRange(record.right + 20, right - record.right)
+    if (record.max[0] !== right) {
+        drawExcludedRange(record.max[0] + 20, right - record.max[0])
     }
 }
 
@@ -399,8 +395,8 @@ function successSensitivity(val) {
 
 function successTenPercOfSpace() {
     if (record.best[1] > sensitivity) {
-        // console.log(record.best[1], record.leftVal, record.best[1] * 0.95, record.rightVal, record.best[1] * 1.05);
-        return record.leftVal > record.best[1] * 0.95 && record.rightVal < record.best[1] * 1.05;
+        // console.log(record.best[1], record.leftVal, record.best[1] * 0.95, record.rightVal, record.best[1] * 0.95);
+        return record.min[1] > record.best[1] * 0.9 && record.max[1] > record.best[1] * 0.9;
     }
     return false;
 }
