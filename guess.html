@@ -89,12 +89,16 @@ fieldset {
 <h3>Search and Solution Space Refinement</h3>
 <fieldset>
 <p>
-    <button onclick="search(1, searchRand, null, successTenPercOfSpace)">Random at ±5% best</button>
-    <button onclick="search(100000, searchRand, null, successTenPercOfSpace)">x100,000</button>
+    <button onclick="search(1, searchRand, null, successNearMax)">Random at ±5% best</button>
+    <button onclick="search(100000, searchRand, null, successNearMax)">x100,000</button>
 <p>
-    <button onclick="search(1, searchUniform, PHI, successTenPercOfSpace)">Uniform Phi at ±5% best</button>
-    <button onclick="search(100000, searchUniform, PHI, successTenPercOfSpace)">x100,000</button>
+    <button onclick="search(1, searchUniform, PHI, successNearMax)">Uniform Phi at ±5% best</button>
+    <button onclick="search(100000, searchUniform, PHI, successNearMax)">x100,000</button>
+<p>
+    <button onclick="search(1, searchPhi, null, successNearMax)">Relative Phi at ±5% best</button>
+    <button onclick="search(100000, searchPhi, null, successNearMax)">x100,000</button>
 </fieldset>
+
 <p>After the first value is found above sensitivity, we can "prune" away areas that we know cannot contain the peak. Searching is stopped when the search space is &lt; 10% of the best value yet discovered.</p>
 </article>
 
@@ -305,6 +309,36 @@ function searchUniform(interval, success) {
     return iter;
 }
 
+function findNextHalf() {
+    var leftHalf = record.best[0] - record.min[0];
+    var rightHalf = record.max[0] - record.best[0];
+    // console.log(leftHalf, rightHalf);
+    if (leftHalf > rightHalf) {
+        return record.min[0] + leftHalf * PHI;
+    }
+    return record.max[0] - rightHalf * PHI;
+}
+
+function searchPhi(interval, success) {
+    var x, y = 0, iter = 0;
+    x = Math.random() * record.max[0];
+    clearRecord();
+
+    while (!success(y) && iter < 200) {
+        iter += 1;
+        if (record.best[1] > sensitivity) {
+            // console.log(record.best[1]);
+            x = findNextHalf(x, PHI);
+        } else {
+            x = findNext(x, PHI);
+        }
+        y = dist(x);
+        updateSearchSpace(x, y);
+    }
+
+    return iter;
+}
+
 function searchRand(interval, success) {
     var x, y = 0, iter = 0, range;
     clearRecord();
@@ -393,6 +427,12 @@ function successSensitivity(val) {
     return val >= sensitivity;
 }
 
+function successNearMax(val) {
+    return val >= 0.78;
+}
+
+// This is not working well enough
+// What is a good way to determine the max of an unknown peak?
 function successTenPercOfSpace() {
     if (record.best[1] > sensitivity) {
         // console.log(record.best[1], record.leftVal, record.best[1] * 0.95, record.rightVal, record.best[1] * 0.95);
