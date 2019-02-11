@@ -97,6 +97,9 @@ fieldset {
 <p>
     <button onclick="search(1, searchPhi, null, successNearMax)">Relative Phi at ±5% best</button>
     <button onclick="search(100000, searchPhi, null, successNearMax)">x100,000</button>
+<p>
+    <button onclick="search(1, searchPhi, null, successTenPercOfSpace)">Relative Phi at ±5% best</button>
+    <button onclick="search(100000, searchPhi, null, successTenPercOfSpace)">x100,000</button>
 </fieldset>
 
 <p>After the first value is found above sensitivity, we can "prune" away areas that we know cannot contain the peak. Searching is stopped when the search space is &lt; 10% of the best value yet discovered.</p>
@@ -312,7 +315,6 @@ function searchUniform(interval, success) {
 function findNextHalf() {
     var leftHalf = record.best[0] - record.min[0];
     var rightHalf = record.max[0] - record.best[0];
-    // console.log(leftHalf, rightHalf);
     if (leftHalf > rightHalf) {
         return record.min[0] + leftHalf * PHI;
     }
@@ -327,7 +329,6 @@ function searchPhi(interval, success) {
     while (!success(y) && iter < 200) {
         iter += 1;
         if (record.best[1] > sensitivity) {
-            // console.log(record.best[1]);
             x = findNextHalf(x, PHI);
         } else {
             x = findNext(x, PHI);
@@ -436,7 +437,7 @@ function successNearMax(val) {
 function successTenPercOfSpace() {
     if (record.best[1] > sensitivity) {
         // console.log(record.best[1], record.leftVal, record.best[1] * 0.95, record.rightVal, record.best[1] * 0.95);
-        return record.min[1] > record.best[1] * 0.9 && record.max[1] > record.best[1] * 0.9;
+        return record.min[1] > record.best[1] * 0.8 && record.max[1] > record.best[1] * 0.8;
     }
     return false;
 }
@@ -459,7 +460,7 @@ function search(iterations, choice, param, success) {
         ave = aveMean(history);
         text = document.createTextNode("    Mean: " + ave.toPrecision(4) + "\n");
         out.appendChild(text);
-        text = document.createTextNode("    Mean variance: " + meanDev(history, ave).toPrecision(4) + "\n");
+        text = document.createTextNode("    Mean deviation: " + meanDev(history, ave).toPrecision(4) + "\n");
     }
     out.appendChild(text);
     scrollOutput();
