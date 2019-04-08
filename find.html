@@ -1,0 +1,374 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Find Unknown Value</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<style>
+/*! simple.css | MIT License | github.com/chrisbroski/simple-css/ */
+* {box-sizing: border-box; }
+html {padding: 10px 10px 200px; font-family: droid sans, sans-serif; }
+body {margin: 0 auto; padding-right: 260px; width: 640px; position: relative; }
+article > *:first-child {margin-top: 0; }
+h1 {font-size: 36px; }
+p, h5 {font-size: 17px; line-height: 1.4em; }
+
+#graphs {
+    margin-left: 80px;
+    position: fixed;
+    top: 20px; left: 50%;
+    width: 240px;
+    height: 140px;
+}
+#graphs p {
+    margin-top: 160px;
+}
+#grid {
+    background: #ddd;
+}
+#grid, #graph {
+    position: absolute;
+    top: 0; left: 0;
+}
+pre {
+    padding: 4px 8px;
+    width: 240px; height: 240px;
+    overflow-y: scroll;
+    white-space: pre-wrap;
+    background: black;
+    color: white;
+}
+input[type="number"] {
+    width: 40px;
+}
+label {font-size: 14px; }
+#test, #show {display: none; }
+</style>
+
+<body>
+<article>
+<h1>Find Unknown Value</h1>
+
+<div id="graphs">
+    <canvas id="grid" width="240" height="140"></canvas>
+    <canvas id="graph" width="240" height="140"></canvas>
+
+    <p>
+        <label>Width: <input id="width" type="number" value="10" min="4" step="1" max="50"></label>
+        <button id="new">Reset to New Value</button>
+        <button id="show">Show</button>
+        <button id="test">Test</button>
+    </p>
+
+    <pre></pre>
+</div>
+
+<p>Let's play a game.
+
+<p>To the right is a graph with a randomly selected 10 unit wide section. Click on the "Reset to New Value" button. This will select a new section at random, and hide it from view. Now, click where you think the new block might be. How many tries did it take you to find it? Try it a few times with these things in mind:
+
+<ul>
+    <li>What number of tries would you consider reasonably good or bad?
+    <li>Do you think it is possible to document an optimal strategy?
+    <li>What strategy are you using?
+    <li>What would be a deliberately poor way to search for the random block?
+    <li>How could you fairly judge if one strategy is better than another?
+</ul>
+
+<p>Let's start with a computer function that is a simple, brute force technique: picking randomly. Click the <em>Random</em> button a few times to run this and see a visualization.
+
+<p>
+    <button onclick="autoTry(findRand)">Random</button>
+
+<p>I think that a good measure of the effectiveness of a search process would be the average number of tries that it takes to find the hidden block. Another measure would be how consistent that average is. For example, if two different search strategies both succeed in an average of 5 turns, but one varies wildly from 1 to 10 turns and the other from 3 to 8, I think the 3 to 8 is preferable because the number of tries is more predictable and can be effectively planned for. (In certain situations it's better to take a wild gamble, but let's worry about that some other time.)
+
+<p>The number of turns it takes for any single attempt to succeed is going to be very unpredictable. Fortunately we can use a computer to run many of them until we get a stable average. Push the button below to get an average and standard deviation of 100,000 random attempts.
+
+<p>
+    <button onclick="autoTry(findRand, 100000)">Random x100,000</button>
+
+<p>The mean average (x̄) should be about 10 turns, and the standard deviation (σ) about 9.5 turns. Standard deviation if a measure of how commonly it takes 10 turns as opposed to something wildly different. A standard deviation of 9 means that this process finds the block 68% of the time in 1 and 19 turns.
+
+<p>It seems that we could do better than choosing at random, but why? Where do you think it can make better guesses? To me, I get frustrated when a randomly selected value is chosen that is very close to one that was already found to be incorrect. (Especially while there are large unexplored areas.) Let's test this by making a strategy that does this even worse: starting at 0, then choosing a value 1% higher until it finally hits something.
+
+<p>
+    <button onclick="autoTry(findUniform, 1, 0.010)">Uniform 1%</button>
+    <button onclick="autoTry(findUniform, 100000, 0.010)">x100,000</button>
+
+<p>This finds our unknown value in about 45 turns on average with a deviation of about 26 turns. This is terrible. Don't use this technique. What this suggests is after we find an incorrect guess, try to make the next guess as different from that one as we can. If we chose one 50% though, and that one also was not correct, what should we choose next? That would just oscillate back and forth between two guesses. Can we find an interval that is close to 50% and never repeat?
+
+<p>Yep, we can. It is about 61.8%. This is called the "Golden Ratio" or "Phi" (φ) and it is an irrational number&mdash;we can't know it's exact value with infinite precision&mdash;but using 61.8% is plenty close enough for this demonstration. (Any values over 100 will wrap around to the beginning by subtracting 100. For example, 123.6 would become 23.6.) Sampling with φ will always select the next value from the largest unexplored area and never select the same value twice. (Which I learned thanks to <a href="https://www.youtube.com/watch?v=sj8Sg8qnjOg">this Numberphile video</a>.) Push this button to see a short demonstration. <button id="phi">Phi Sampling x100</button>
+
+<p>Now check out some single tries and generate statistics to compare how well this strategy works compared to random.
+
+<p>
+    <button onclick="autoTry(findUniform, 1, 0.618)">Uniform 61.8%</button>
+    <button onclick="autoTry(findUniform, 100000, 0.618)">x100,000</button>
+
+<p>This is clearly the best strategy we have tried so far. But how does compare to the strategy you used? I am not certain what you tried, but what I felt was natural is to start at 50, then try 25, then 75, and keep selecting halfway between ones that I had previously chosen starting from those closest to the middle and working outward (37.5, 62.5, 12.5, 87.5, 43.75, etc.) Click on the "Middle of untried area" button and I think it will make more sense.
+
+<p>
+    <button onclick="autoTry(findPattern)">Middle of untried areas</button>
+    <button onclick="autoTry(findPattern, 100000)">x100,000</button>
+
+<p>This gives a small, but real, 2.5% decrease in average amount of turns needed, but also increases the standard deviation by about 12%. Is this an overall improvement? I am not sure. However, I am certain that comparing the calculations required by each of these strategies, φ sampling is much simpler. Intelligent creatures must consider other costs when choosing optimal strategies, including the amount of time and resources required to implement and execute each strategy. φ sampling only needs to remember the previous choice and perform a simple mathematical operation on it (multiply by 1.618 and subtract the amount of total range if over the maximum.) The successive-middle-of-untried-areas method is more complex, but I am not certain how much because I didn't bother to implement it - I just hard-coded the intervals. It seemed like too much work for too little benefit.
+
+<p>Maybe a simple implementation can be found, but I know what I am going to use when building my intelligent machines. I have enough complexities to worry about, so I am happy to use the elegance and simplicity of φ.
+
+</article>
+
+<script>
+var maxX = 100;
+var scale = 2;
+var PHI = 0.61803398875;
+var mean = 50;
+var wide = 10;
+var turn = 0;
+var canvas;
+var ctx;
+var record = {attempts: [], found: -1};
+
+function drawRule() {
+    var grid = document.querySelector("#grid");
+
+    gridCtx = grid.getContext("2d");
+    gridCtx.beginPath();
+    gridCtx.moveTo(17.5, 120.5);
+    gridCtx.lineTo(230.5, 120.5);
+    gridCtx.moveTo(20.5, 15.5);
+    gridCtx.lineTo(20.5, 125.5);
+    gridCtx.moveTo(17.5, 20.5);
+    gridCtx.lineTo(23.5, 20.5);
+    gridCtx.moveTo(120.5, 117.5);
+    gridCtx.lineTo(120.5, 123.5);
+    gridCtx.moveTo(220.5, 117.5);
+    gridCtx.lineTo(220.5, 123.5);
+    gridCtx.fillText('0.0', 2, 124);
+    gridCtx.fillText('1.0', 2, 24);
+    gridCtx.fillText('0', 18, 135);
+    gridCtx.fillText('50', 115, 135);
+    gridCtx.fillText('100', 212, 135);
+    gridCtx.stroke();
+}
+
+function drawBlock() {
+    ctx.beginPath();
+    ctx.fillRect(20 + (mean * scale), 20, wide * scale, 100);
+    ctx.stroke();
+}
+
+function scrollOutput() {
+    var out = document.querySelector("pre");
+    out.scrollTop = out.scrollHeight;
+}
+
+function newBlock(forceMean) {
+    getInputValues();
+    turn = 0;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!forceMean || typeof forceMean !== "number") {
+        mean = parseInt(Math.random() * (maxX - wide) + 1, 10);
+    } else {
+        mean = parseFloat(forceMean);
+    }
+}
+
+function tryOne(e) {
+    var out = document.querySelector("pre"), text;
+    var rect = e.target.getBoundingClientRect();
+    var x = e.clientX - rect.left - 21;
+    turn += 1;
+
+    drawGuess(x);
+    if ((x / scale) >= mean && (x / scale) <= (mean + wide)) {
+        if (turn === 1) {
+            text = document.createTextNode("trying: " + (x / scale) + "; found in " + turn +  " turns\n");
+        } else {
+            text = document.createTextNode("\n" + (x / scale) + "; found in " + turn +  " turns\n");
+        }
+        drawBlock();
+    } else {
+        if (turn === 1) {
+            text = document.createTextNode("trying: " + (x / scale));
+        } else {
+            text = document.createTextNode(", " + (x / scale));
+        }
+    }
+
+    out.appendChild(text);
+    scrollOutput();
+}
+
+function clearRecord() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    record.attempts.length = 0;
+    record.found = -1;
+}
+
+function findRand(max) {
+    var x = -1, y = 0, iter = 0;
+    clearRecord();
+
+    while ((x < mean || x > (mean + wide)) && iter < max) {
+        iter += 1;
+        x = Math.random() * maxX;
+        record.attempts.push(x);
+    }
+    if (max === iter) {
+        console.log("rand max achieved at " + max);
+    }
+    record.found = x;
+    return iter;
+}
+
+function findUniform(max, interval) {
+    var x = -1, y = 0, iter = 0;
+    clearRecord();
+
+    while ((x < mean || x > (mean + wide)) && iter < max) {
+        iter += 1;
+        if (x === -1) {
+            x = 0;
+        }
+        x = x + interval * maxX;
+        if (x > maxX) {
+            x = x - maxX;
+        }
+        record.attempts.push(x);
+    }
+    if (max === iter) {
+        console.log("uniform " + interval + "  maxxed");
+    }
+    record.found = x;
+    return iter;
+}
+
+function findPattern() {
+    var ii, x = -1, y = 0, iter = 0;
+    var pattern = [0.5, 0.25, 0.75, 0.375, 0.625, 0.125, 0.875, 0.4375, 0.5625, 0.3125, 0.6875, 0.1875, 0.8125, 0.0625, 0.9375, 0.46875, 0.53125, 0.40625, 0.59375, 0.34375, 0.65625, 0.28125, 0.71875, 0.21875, 0.78125, 0.15625, 0.84375, 0.09375, 0.90625, 0.03125, 0.96875];
+    clearRecord();
+
+    for (ii = 0; ii < pattern.length; ii += 1) {
+        x = pattern[ii] * maxX;
+        record.attempts.push(x);
+        if (x >= mean & x <= (mean + wide)) {
+            record.found = x;
+            return ii + 1;
+        }
+    }
+    console.log("max", ii, mean);
+    return Number.MAX_VALUE;
+}
+
+function aveMean(a) {
+    var total = a.reduce(function (a, b) {
+        return a + b;
+    });
+    return total / a.length;
+}
+
+function meanDev(a, x) {
+    var total = a.reduce(function (a, b) {
+        return a + Math.abs(b - x);
+    });
+    return total / a.length;
+}
+
+function stdDev(arr, mean) {
+    return Math.sqrt(arr.reduce(function (a, b) {
+        var diff = b - mean;
+        return a + (diff * diff);
+    }, 0) / arr.length);
+}
+
+function drawGuess(guess) {
+    ctx.strokeStyle = 'gray';
+    ctx.beginPath();
+    ctx.moveTo(guess + 20.5, 120.5);
+    ctx.lineTo(guess + 20.5, 20.5);
+    ctx.stroke();
+    ctx.strokeStyle = 'black';
+}
+
+function showGuess(guesses) {
+    var guess = guesses.shift();
+    drawGuess(guess * scale);
+
+    if (guesses.length) {
+        window.setTimeout(function () {
+            showGuess(guesses);
+        }, 250);
+    } else {
+        drawBlock();
+    }
+}
+
+function replay() {
+    var guesses = record.attempts.slice();
+    showGuess(guesses);
+}
+
+function getInputValues() {
+    wide = parseInt(document.querySelector("#width").value, 10);
+}
+
+function intervalToPerc(interval) {
+    if (interval) {
+        return " " + (interval * 100) + "%";
+    }
+    return "";
+}
+
+function autoTry(choice, iterations, interval, initial, forceMean) {
+    var ii, tries, history = [], ave, out = document.querySelector("pre"), text;
+    iterations = iterations || 1;
+    text = document.createTextNode(choice.name + intervalToPerc(interval) + " ×" + iterations + "\n");
+    out.appendChild(text);
+    for (ii = 0; ii < iterations; ii += 1) {
+        newBlock(forceMean);
+        tries = choice(100, interval, initial);
+        history.push(tries);
+    }
+    if (iterations === 1)  {
+        text = document.createTextNode("  Guesses: " + tries + ", x: " + record.found.toPrecision(4) + "\n");
+        replay();
+    } else {
+        ave = aveMean(history);
+        text = document.createTextNode("  x̄: " + ave.toPrecision(4) + " σ: " + stdDev(history, ave).toPrecision(6) + "\n");
+        out.appendChild(text);
+    }
+    out.appendChild(text);
+    scrollOutput();
+}
+
+function init() {
+    canvas = document.getElementById("graph");
+    ctx = canvas.getContext("2d");
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+
+    drawRule();
+    newBlock();
+    canvas.addEventListener("click", tryOne);
+    document.querySelector("#new").addEventListener("click", newBlock);
+    document.querySelector("#show").addEventListener("click", drawBlock);
+    document.querySelector("#phi").addEventListener("click", function () {
+        turn = 0;
+        mean = 1000;
+        autoTry(findUniform, 1, 0.618, 0, 200)
+        replay();
+    });
+    document.querySelector("#test").addEventListener("click", function () {
+        turn = 0;
+        autoTry(findPattern, 1, 0, 0, 88)
+        replay();
+    });
+    drawBlock();
+}
+
+init();
+
+</script>
